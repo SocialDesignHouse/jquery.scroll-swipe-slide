@@ -282,10 +282,14 @@ $.event.setupHelper( [
 					var events = ['swipe'];
 					//check if we moved on both axes
 					if(deltaX >= swipe.min && deltaY >= swipe.min) {
-						//if we're within our Y axis threshold, treat it as a swipe up/down
+						//if we're within our Y axis threshhold, treat it as a swipe up/down
 						if(deltaX <= swipe.threshhold && deltaY >= swipe.min) {
 							// based on the y coordinate check if we moved up or down
 							events.push( start.coords[1] < stop.coords[1] ? "swipedown" : "swipeup" );
+						} else
+						//if we're within our X axis threshhold, treat it as a swipe left/right
+						if(deltaY <= swipe.threshhold && deltaX >= swipe.min) {
+							events.push( start.coords[1] < stop.coords[1] ? "swipeleft" : "swiperight" );
 						}
 					} else
 					// check if we moved horizontally

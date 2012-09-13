@@ -71,9 +71,9 @@
 			base_url : '',
 			multi_dir : false, //not implemented yet
 			container : '.project',
-			container_before : '',
-			container_after : '',
-			slides : '.slide', //not implemented yet
+			container_before : null,
+			container_after : null,
+			slides : '.slide',
 			slides_before : '', //not implemented yet
 			slides_after : '', //not implemented yet
 			nav : '.slide-nav',
@@ -84,7 +84,7 @@
 			scroll_lockout : 20,
 			width : '100%',
 			height : '100%',
-			callback : '',
+			callback : null,
 			//if you have a title page that you don't want to include in your slides
 			skip_first : false
 		};
@@ -134,6 +134,11 @@
 
 				//bind events
 				$this.bind_events();
+
+				//check for multi-directional
+				if(settings.multi_dir) {
+					$this.multi_directional();
+				}
 
 				//run user-defined callback function
 				settings.callback.call(this);
@@ -205,6 +210,9 @@
 				$(settings.nav).css({
 					'margin' : nav_pad + 'px 0'
 				});
+				if(settings.multi_dir) {
+					$this.multi_dir_css();
+				}
 			},
 			
 			//create the navigation
@@ -260,7 +268,9 @@
 						//set index for desired element
 						index = $go_to.index();
 						$this.container = index;
-						settings.container_before.call(this);
+						if(settings.container_before) {
+							settings.container_before.call(this);
+						}
 						//switch active states on the nav
 						$(settings.nav).find('.active').removeClass('active');
 						$(settings.nav).find('.slide-circle:eq(' + index + ')').addClass('active');
@@ -283,7 +293,9 @@
 							$(settings.slideshow_class).find('.active').removeClass('active');
 							$go_to.addClass('active');
 						}
-						settings.container_after.call(this);
+						if(settings.container_after) {
+							settings.container_after.call(this);
+						}
 					}
 				}
 			},
@@ -412,7 +424,6 @@
 					if (e.preventDefault) {
 						e.preventDefault();
 					}
-					console.log($this.settings.skip_first);
 					//if we aren't supposed to skip the first scroll or we aren't on the first one
 					if(!$this.settings.skip_first || $this.this_scroll > 0) {
 						//if we aren't already scrolling
@@ -517,7 +528,9 @@
 					$this.bottom = false;
 					$this.bottom = false;
 				}
-				settings.container_before.call(this);
+				if(settings.container_before) {
+					settings.container_before.call(this);
+				}
 				go_to.addClass('active');
 				//scroll it
 				$(settings.slideshow_class).stop(true,true).scrollTo(
@@ -530,7 +543,9 @@
 				);
 				$this.current = go_to;
 				$this.update_history();
-				settings.container_after.call(this);
+				if(settings.container_after) {
+					settings.container_after.call(this);
+				}
 			},
 
 			//bind history statechange event
@@ -539,6 +554,114 @@
 				History.Adapter.bind(window, 'statechange', function() {
 					var State = History.getState();
 					//History.log(State.data, State.title, State.url);
+				});
+			},
+
+			/*------------------------------------------------------------------------------
+			
+				multi-directional-specific methods
+			
+			------------------------------------------------------------------------------*/
+
+			//set up slides for multi-directional scrolling
+			multi_directional : function() {
+				var $this = this;
+				var settings = $this.settings;
+				//iterate through containers and find their slides
+				$(settings.container).each(function() {
+					var total_slides = $(this).find(settings.slides).length;
+					$(this).data('slides',total_slides);
+				});
+				$this.bind_multi_dir_events();
+			},
+
+			//styles for multi-directional  slideshow
+			multi_dir_css : function() {
+				var $this = this;
+				var settings = $this.settings;
+				//stretch slides
+				var new_width = $this.win_width - 20;
+				$(settings.slides).css({
+					width : new_width + 'px',
+					height : $this.win_height + 'px',
+					float : 'left'
+				});
+				$(settings.container).each(function() {
+					var this_slides = $(this).data('slides');
+					var this_width = $this.win_width * this_slides;
+					$(settings.container).css({
+						width : this_width + 'px',
+						postition : 'relative',
+						left : '0px',
+						top : '0px'
+					});
+				});
+			},
+
+			//bind events for multi-directional slideshows
+			bind_multi_dir_events : function() {
+				var $this = this;
+				var settings = $this.settings;
+				if(settings.enable_keys) {
+					$this.bind_left_right_key();
+				}
+				if(settings.enable_swipe) {
+					$this.bind_left_right_swipe();
+				}
+			},
+
+			//set left/right keys
+			bind_left_right_key : function() {
+				var $this = this;
+				//on keypress
+				$(document).keyup(function(e) {
+					//prevent normal action
+					if (e.preventDefault) {
+						e.preventDefault();
+					}
+					//get keycode
+					var key = e.which;
+					//if we aren't currently scrolling
+					if(!$this.scrolling) {
+						$this.direction = '';
+						//left arrow key
+						if(key == 37) {
+							//set direction to left
+							$this.direction = 'l';
+						//right arrow key
+						} else if(key == 39) {
+							//set direction to right
+							$this.direction = 'r';
+						}
+						//move the page
+						$this.slide_it();
+					}
+					return false;
+				});
+			},
+
+			//set left/right swipe
+			bind_left_right_swipe : function() {
+				//bind swipe events for moving to the next item
+				$('body').on('swipeleft', function(e) {
+					//don't do anything
+					if (e.preventDefault) {
+						e.preventDefault();
+					}
+					$this.direction = 'l';
+					$this.slide_it();
+					return false;
+				});
+				
+				//bind swipe events for moving to the previous item
+				$('body').on('swiperight', function(e) {
+					//don't do anything
+					if (e.preventDefault) {
+						e.preventDefault();
+					}
+					$this.direction = 'r';
+					$this.slide_it();
+					return false;
 				});
 			}
 		};
