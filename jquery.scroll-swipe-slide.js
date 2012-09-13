@@ -10,8 +10,8 @@
  * @docs		http://socialdesignhouse.com/
  * @version		0.1
  * @deps		jQuery, jQuery Mousewheel
- * @optional	jQuery++ Swipe Events, jQuery Easing, History JS
- *				jQuery ScrollTo
+ * @optional		jQuery++ Swipe Events, jQuery Easing, History JS
+ *			jQuery ScrollTo
  *
 =================================================================*/
 
@@ -71,8 +71,8 @@
 			base_url : '',
 			multi_dir : false, //not implemented yet
 			container : '.project',
-			container_before : '', //not implemented yet
-			container_after : '', //not implemented yet
+			container_before : '',
+			container_after : '',
 			slides : '.slide', //not implemented yet
 			slides_before : '', //not implemented yet
 			slides_after : '', //not implemented yet
@@ -112,6 +112,8 @@
 				$this.scrolling = false;
 				$this.this_scroll = 0;
 				$this.last_scroll = 0;
+				$this.container = 0;
+				$this.slide = 0;
 
 				//check if History is enabled
 				if(settings.use_history && settings.base_url) {
@@ -242,7 +244,7 @@
 							$go_to = $(settings.slideshow_class).find('.active').prev(settings.container);
 						//we're at the top
 						} else {
-							$go_to = $(settings.slideshow_class).find('.active');
+							return false;
 						}
 					//going down
 					} else if($this.direction == 'd') {
@@ -251,32 +253,37 @@
 							$go_to = $(settings.slideshow_class).find('.active').next(settings.container);
 						//we're at the bottom
 						} else {
-							$go_to = $(settings.slideshow_class).find('.active');
+							return false;
 						}
 					}
-					//set index for desired element
-					index = $go_to.index();
-					//switch active states on the nav
-					$(settings.nav).find('.active').removeClass('active');
-					$(settings.nav).find('.slide-circle:eq(' + index + ')').addClass('active');
-					//scroll
-					$(settings.slideshow_class).stop(true,true).scrollTo(
-						$go_to, settings.scroll_time, {
-							easing : settings.easing,
-							onAfter : function() {
-								//increment this_scroll
-								$this.this_scroll++;
-								scroll_timeout = setTimeout(function() { $this.scrolling = false; }, settings.scroll_lockout);
+					if($go_to) {
+						//set index for desired element
+						index = $go_to.index();
+						$this.container = index;
+						settings.container_before.call(this);
+						//switch active states on the nav
+						$(settings.nav).find('.active').removeClass('active');
+						$(settings.nav).find('.slide-circle:eq(' + index + ')').addClass('active');
+						//scroll
+						$(settings.slideshow_class).stop(true,true).scrollTo(
+							$go_to, settings.scroll_time, {
+								easing : settings.easing,
+								onAfter : function() {
+									//increment this_scroll
+									$this.this_scroll++;
+									scroll_timeout = setTimeout(function() { $this.scrolling = false; }, settings.scroll_lockout);
+								}
 							}
+						);
+						//set history
+						$this.current = $go_to;
+						$this.update_history();
+						//if we aren't already on the active item
+						if(!$go_to.hasClass('active')) {
+							$(settings.slideshow_class).find('.active').removeClass('active');
+							$go_to.addClass('active');
 						}
-					);
-					//set history
-					$this.current = $go_to;
-					$this.update_history();
-					//if we aren't already on the active item
-					if(!$go_to.hasClass('active')) {
-						$(settings.slideshow_class).find('.active').removeClass('active');
-						$go_to.addClass('active');
+						settings.container_after.call(this);
 					}
 				}
 			},
@@ -499,6 +506,18 @@
 				var settings = $this.settings;
 				var go_to = $('.project:eq(' + $this.go_to + ')');
 				//make that slide active
+				$this.cotainer = $this.go_to;
+				if($this.slide === 0) {
+					$this.top = true;
+					$this.bottom = false;
+				} else if($this.slide == $(settings.nav).find('.slide-circle').length - 1) {
+					$this.bottom = true;
+					$this.top = false;
+				} else {
+					$this.bottom = false;
+					$this.bottom = false;
+				}
+				settings.container_before.call(this);
 				go_to.addClass('active');
 				//scroll it
 				$(settings.slideshow_class).stop(true,true).scrollTo(
@@ -511,6 +530,7 @@
 				);
 				$this.current = go_to;
 				$this.update_history();
+				settings.container_after.call(this);
 			},
 
 			//bind history statechange event
