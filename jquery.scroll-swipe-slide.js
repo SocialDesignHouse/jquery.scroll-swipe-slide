@@ -64,29 +64,29 @@
 
 		//set up default options
 		$.fn.scrollSwipeSlide.default_settings = {
-			use_scrollto : true,
-			use_swipe : true,
+			use_scrollto : true, //requires jQuery ScrollTo (this is included in the scripts folder)
+			use_swipe : true, //requires a swipe events plug-in (jQuery++ Swipe Events with swipe variation threshhold is included in the scripts folder)
 			use_keypress : true,
-			use_history : false,
-			base_url : '',
+			use_history : false, //requires History JS (this is included in the scripts folder)
+			base_url : '', //required if you want to use History JS
 			multi_dir : false, //not implemented yet
 			container : '.project',
 			container_before : null,
 			container_after : null,
 			slides : '.slide',
-			slides_before : '', //not implemented yet
-			slides_after : '', //not implemented yet
+			slides_before : null, //not implemented yet
+			slides_after : null, //not implemented yet
 			nav : '.slide-nav',
 			slideshow_class : '.slideshow',
-			easing : 'easeInOutExpo', //requires easing plug-in
+			easing : 'easeInOutExpo', //requires easing plug-in (this is included in the scrips folder)
 			//less than 1000 and it double scrolls when using Apple's inertial scrolling
 			scroll_time : 1000,
 			scroll_lockout : 20,
 			width : '100%',
 			height : '100%',
-			callback : null,
 			//if you have a title page that you don't want to include in your slides
-			skip_first : false
+			skip_first : false,
+			callback : null
 		};
 
 		//add settings to object
@@ -106,6 +106,13 @@
 
 				//set up the environment
 				$this.build_nav();
+
+				//check for multi-directional
+				if(settings.multi_dir) {
+					$this.multi_directional();
+				}
+
+				//set the css for the slideshow
 				$this.set_css();
 
 				//initialize values for scrolling logic
@@ -134,11 +141,6 @@
 
 				//bind events
 				$this.bind_events();
-
-				//check for multi-directional
-				if(settings.multi_dir) {
-					$this.multi_directional();
-				}
 
 				//run user-defined callback function
 				settings.callback.call(this);
@@ -249,7 +251,8 @@
 					if($this.direction == 'u') {
 						//if there is a previous item
 						if($(settings.slideshow_class).find('.active').prev(settings.container).length > 0) {
-							$go_to = $(settings.slideshow_class).find('.active').prev(settings.container);
+							$this.go_to = $(settings.slideshow_class).find('.active').prev(settings.container);
+							$this.slide_vertical();
 						//we're at the top
 						} else {
 							return false;
@@ -258,44 +261,73 @@
 					} else if($this.direction == 'd') {
 						//if there is a next item
 						if($(settings.slideshow_class).find('.active').next(settings.container).length > 0) {
-							$go_to = $(settings.slideshow_class).find('.active').next(settings.container);
+							$this.go_to = $(settings.slideshow_class).find('.active').next(settings.container);
+							$this.slide_vertical();
 						//we're at the bottom
 						} else {
 							return false;
 						}
+					//going left
+					} else if($this.direction == 'r') {
+						//if there is a next item
+						if($(settings.container + ':eq(' + $this.container + ')').find('.current').next(settings.slides).length > 0) {
+							$this.go_to = $(settings.container + ':eq(' + $this.container + ')').find('.current').next(settings.slides);
+							$this.slide_horizontal();
+						//we're all the way to the left
+						} else {
+							return false;
+						}
+					//going right
+					} else if($this.direction == 'l') {
+						//if there is a next item
+						if($(settings.container + ':eq(' + $this.container + ')').find('.current').prev(settings.slides).length > 0) {
+							$this.go_to = $(settings.container + ':eq(' + $this.container + ')').find('.current').prev(settings.slides);
+							$this.slide_horizontal();
+						//we're all the way to the right
+						} else {
+							return false;
+						}
 					}
-					if($go_to) {
-						//set index for desired element
-						index = $go_to.index();
-						$this.container = index;
-						if(settings.container_before) {
-							settings.container_before.call(this);
-						}
-						//switch active states on the nav
-						$(settings.nav).find('.active').removeClass('active');
-						$(settings.nav).find('.slide-circle:eq(' + index + ')').addClass('active');
-						//scroll
-						$(settings.slideshow_class).stop(true,true).scrollTo(
-							$go_to, settings.scroll_time, {
-								easing : settings.easing,
-								onAfter : function() {
-									//increment this_scroll
-									$this.this_scroll++;
-									scroll_timeout = setTimeout(function() { $this.scrolling = false; }, settings.scroll_lockout);
-								}
+				}
+			},
+
+			//move it up and down
+			slide_vertical : function() {
+				var $this = this;
+				var settings = $this.settings;
+				if($this.go_to) {
+					var go_to = $this.go_to;
+					//set index for desired element
+					index = go_to.index();
+					$this.container = index;
+					if(settings.container_before) {
+						settings.container_before.call(this);
+					}
+					//switch active states on the nav
+					$(settings.nav).find('.active').removeClass('active');
+					$(settings.nav).find('.slide-circle:eq(' + index + ')').addClass('active');
+					//scroll
+					$(settings.slideshow_class).stop(true,true).scrollTo(
+						go_to, settings.scroll_time, {
+							easing : settings.easing,
+							onAfter : function() {
+								//increment this_scroll
+								$this.this_scroll++;
+								scroll_timeout = setTimeout(function() { $this.scrolling = false; }, settings.scroll_lockout);
+								$(settings.container + ':eq(' + index + ')').find(settings.slides + ':first').addClass('current');
 							}
-						);
-						//set history
-						$this.current = $go_to;
-						$this.update_history();
-						//if we aren't already on the active item
-						if(!$go_to.hasClass('active')) {
-							$(settings.slideshow_class).find('.active').removeClass('active');
-							$go_to.addClass('active');
 						}
-						if(settings.container_after) {
-							settings.container_after.call(this);
-						}
+					);
+					//set history
+					$this.current = go_to;
+					$this.update_history();
+					//if we aren't already on the active item
+					if(!go_to.hasClass('active')) {
+						$(settings.slideshow_class).find('.active').removeClass('active');
+						go_to.addClass('active');
+					}
+					if(settings.container_after) {
+						settings.container_after.call(this);
 					}
 				}
 			},
@@ -384,6 +416,7 @@
 			//bind keypresses
 			enable_keys : function() {
 				var $this = this;
+				var settings = $this.settings;
 				//on keypress
 				$(document).keyup(function(e) {
 					//prevent normal action
@@ -392,6 +425,7 @@
 					}
 					//get keycode
 					var key = e.which;
+					console.log(key);
 					//if we aren't currently scrolling
 					if(!$this.scrolling) {
 						$this.direction = '';
@@ -407,6 +441,18 @@
 						} else if(key == 36 || key ==35) {
 							//don't scroll
 							return false;
+						}
+						//if we are going horizontal, too
+						if(settings.multi_dir) {
+							//left arrow key
+							if(key == 37) {
+								//set direction to left
+								$this.direction = 'l';
+							//right arrow key
+							} else if(key == 39) {
+								//set direction to right
+								$this.direction = 'r';
+							}
 						}
 						//move the page
 						$this.slide_it();
@@ -602,42 +648,9 @@
 			bind_multi_dir_events : function() {
 				var $this = this;
 				var settings = $this.settings;
-				if(settings.enable_keys) {
-					$this.bind_left_right_key();
-				}
 				if(settings.enable_swipe) {
 					$this.bind_left_right_swipe();
 				}
-			},
-
-			//set left/right keys
-			bind_left_right_key : function() {
-				var $this = this;
-				//on keypress
-				$(document).keyup(function(e) {
-					//prevent normal action
-					if (e.preventDefault) {
-						e.preventDefault();
-					}
-					//get keycode
-					var key = e.which;
-					//if we aren't currently scrolling
-					if(!$this.scrolling) {
-						$this.direction = '';
-						//left arrow key
-						if(key == 37) {
-							//set direction to left
-							$this.direction = 'l';
-						//right arrow key
-						} else if(key == 39) {
-							//set direction to right
-							$this.direction = 'r';
-						}
-						//move the page
-						$this.slide_it();
-					}
-					return false;
-				});
 			},
 
 			//set left/right swipe
@@ -663,6 +676,42 @@
 					$this.slide_it();
 					return false;
 				});
+			},
+
+			//move it left and right
+			slide_horizontal : function() {
+				var $this = this;
+				var settings = $this.settings;
+				console.log('test');
+				if($this.go_to) {
+					var go_to = $this.go_to;
+					//set index for desired element
+					index = go_to.index();
+					$this.slide = index;
+					if(settings.slide_before) {
+						settings.slide_before.call(this);
+					}
+					//switch active states on the nav
+					$(settings.container + ':eq(' + $this.container + ')').find('.current').removeClass('current');
+					$(settings.container + ':eq(' + $this.container + ')').find(settings.slides + ':eq(' + index + ')').addClass('current');
+					//scroll
+					$(settings.container).stop(true,true).scrollTo(
+						go_to, settings.scroll_time, {
+							easing : settings.easing
+						}
+					);
+					//set history
+					$this.current = go_to;
+					$this.update_history();
+					//if we aren't already on the active item
+					if(!go_to.hasClass('active')) {
+						$(settings.slideshow_class).find('.active').removeClass('active');
+						go_to.addClass('active');
+					}
+					if(settings.container_after) {
+						settings.container_after.call(this);
+					}
+				}
 			}
 		};
 
