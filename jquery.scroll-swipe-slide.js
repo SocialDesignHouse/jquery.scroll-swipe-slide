@@ -265,14 +265,14 @@
 					//going left
 					} else if($this.direction == 'r') {
 						//if there is a next item
-						if($(settings.container + ':eq(' + $this.container + ')').find('.current').prev(settings.slides).length > 0) {
+						if($(settings.container + ':eq(' + $this.container + ')').find('.current').next(settings.slides).length > 0) {
 							$this.go_to = $(settings.container + ':eq(' + $this.container + ')').find('.current').next(settings.slides);
 							$this.slide_horizontal();
 						}
 					//going right
 					} else if($this.direction == 'l') {
 						//if there is a next item
-						if($(settings.container + ':eq(' + $this.container + ')').find('.current').next(settings.slides).length > 0) {
+						if($(settings.container + ':eq(' + $this.container + ')').find('.current').prev(settings.slides).length > 0) {
 							$this.go_to = $(settings.container + ':eq(' + $this.container + ')').find('.current').prev(settings.slides);
 							$this.slide_horizontal();
 						}
@@ -311,6 +311,7 @@
 					$this.current = go_to;
 					$this.update_history();
 					//if we aren't already on the active item
+					$(settings.sldeshow_class).find('.active').find('.current').removeClass('current');
 					if(!go_to.hasClass('active')) {
 						$(settings.slideshow_class).find('.active').removeClass('active');
 						go_to.addClass('active');
