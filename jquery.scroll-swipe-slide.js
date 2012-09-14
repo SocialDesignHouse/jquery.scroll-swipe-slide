@@ -254,6 +254,8 @@
 						if($(settings.slideshow_class).find('.active').prev(settings.container).length > 0) {
 							$this.go_to = $(settings.slideshow_class).find('.active').prev(settings.container);
 							$this.slide_vertical();
+						} else {
+							$this.scrolling = false;
 						}
 					//going down
 					} else if($this.direction == 'd') {
@@ -261,6 +263,8 @@
 						if($(settings.slideshow_class).find('.active').next(settings.container).length > 0) {
 							$this.go_to = $(settings.slideshow_class).find('.active').next(settings.container);
 							$this.slide_vertical();
+						} else {
+							$this.scrolling = false;
 						}
 					//going left
 					} else if($this.direction == 'r') {
@@ -268,6 +272,8 @@
 						if($(settings.container + ':eq(' + $this.container + ')').find('.current').next(settings.slides).length > 0) {
 							$this.go_to = $(settings.container + ':eq(' + $this.container + ')').find('.current').next(settings.slides);
 							$this.slide_horizontal();
+						} else {
+							$this.scrolling = false;
 						}
 					//going right
 					} else if($this.direction == 'l') {
@@ -275,6 +281,8 @@
 						if($(settings.container + ':eq(' + $this.container + ')').find('.current').prev(settings.slides).length > 0) {
 							$this.go_to = $(settings.container + ':eq(' + $this.container + ')').find('.current').prev(settings.slides);
 							$this.slide_horizontal();
+						} else {
+							$this.scrolling = false;
 						}
 					}
 				}
@@ -303,7 +311,9 @@
 								//increment this_scroll
 								$this.this_scroll++;
 								scroll_timeout = setTimeout(function() { $this.scrolling = false; }, settings.scroll_lockout);
-								$(settings.container + ':eq(' + index + ')').find(settings.slides + ':first').addClass('current');
+								if(!$(settings.container + ':eq(' + index + ')').find('.current').length > 0) {
+									$(settings.container + ':eq(' + index + ')').find(settings.slides + ':first').addClass('current');
+								}
 							}
 						}
 					);
