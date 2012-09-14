@@ -75,14 +75,14 @@
 			go_to_next_container: false,
 			container : '.project',
 			//runs before switching containers
-			container_before : null,
+			container_before : '',
 			//runs after switching containers
-			container_after : null,
+			container_after : '',
 			slides : '.slide',
 			//runs before switching slides
-			slides_before : null,
+			slides_before : '',
 			//runs after switching slides
-			slides_after : null,
+			slides_after : '',
 			nav : '.slide-nav',
 			slideshow_class : '.slideshow',
 			easing : 'easeInOutExpo', //requires easing plug-in (this is included in the scrips folder)
@@ -94,7 +94,7 @@
 			//if you have a title page that you don't want to include in your slides
 			skip_first : false,
 			//runs after initializing the slideshow
-			callback : null
+			callback : ''
 		};
 
 		//add settings to object
@@ -151,7 +151,9 @@
 				$this.bind_events();
 
 				//run user-defined callback function
-				settings.callback.call(this);
+				if(settings.callback) {
+					settings.callback.call(this);
+				}
 			},
 			
 			//bind event handlers
@@ -392,6 +394,7 @@
 								//unset the active slide
 								$(settings.slideshow_class).find('.active').removeClass('active');
 								//get the corresponding index
+								$this.container = $(this).index();
 								$this.go_to = $(this).index();
 								//move to slide
 								$this.move_to();
@@ -643,18 +646,18 @@
 				var settings = $this.settings;
 				//stretch slides
 				$(settings.slides).css({
-					width : $this.win_width + 'px',
-					height : $this.win_height + 'px',
-					float : 'left'
+					'width' : $this.win_width + 'px',
+					'height' : $this.win_height + 'px',
+					'float' : 'left'
 				});
 				$(settings.container).each(function() {
 					var this_slides = $(this).data('slides');
 					var this_width = $this.win_width * this_slides;
 					$(this).css({
-						width : this_width + 'px',
-						position : 'relative',
-						left : '0px',
-						top : '0px'
+						'width' : this_width + 'px',
+						'position' : 'relative',
+						'left' : '0px',
+						'top' : '0px'
 					});
 				});
 			},
@@ -702,8 +705,8 @@
 					var go_to = $this.go_to;
 					//set index for desired element
 					$this.slide = go_to.index();
-					if(settings.slide_before) {
-						settings.slide_before.call(this);
+					if(settings.slides_before) {
+						settings.slides_before.call(this);
 					}
 					//switch active states on the nav
 						//switch thumbnail active state here
@@ -723,7 +726,7 @@
 					TweenMax.to(
 						$(settings.container + ':eq(' + $this.container + ')'), 0.8, {
 							css : {
-								left : move + 'px'
+								'left' : move + 'px'
 							},
 							ease : Expo.easeInOut,
 							onComplete : function() {
@@ -736,8 +739,8 @@
 						$(settings.container + ':eq(' + $this.container + ')').find('.current').removeClass('current');
 						$(settings.container + ':eq(' + $this.container + ')').find(settings.slides + ':eq(' + $this.slide + ')').addClass('current');
 					}
-					if(settings.container_after) {
-						settings.container_after.call(this);
+					if(settings.slides_after) {
+						settings.slides_after.call(this);
 					}
 				}
 			}
