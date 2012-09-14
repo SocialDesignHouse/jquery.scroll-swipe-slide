@@ -8,7 +8,7 @@
  * @license		MIT
  * @link		http://socialdesignhouse.com/
  * @docs		http://socialdesignhouse.com/
- * @version		0.1
+ * @version		0.5
  * @deps		jQuery, jQuery Mousewheel
  * @optional		jQuery++ Swipe Events, jQuery Easing, History JS
  *			jQuery ScrollTo
@@ -277,7 +277,7 @@
 							$this.scrolling = false;
 						}
 					//going left
-					} else if($this.direction == 'r') {
+					} else if($this.direction == 'r' && settings.multi_dir) {
 						//if there is a next item
 						if($(settings.container + ':eq(' + $this.container + ')').find('.current').next(settings.slides).length > 0) {
 							$this.go_to = $(settings.container + ':eq(' + $this.container + ')').find('.current').next(settings.slides);
@@ -292,7 +292,7 @@
 							}
 						}
 					//going right
-					} else if($this.direction == 'l') {
+					} else if($this.direction == 'l' && settings.multi_dir) {
 						//if there is a next item
 						if($(settings.container + ':eq(' + $this.container + ')').find('.current').prev(settings.slides).length > 0) {
 							$this.go_to = $(settings.container + ':eq(' + $this.container + ')').find('.current').prev(settings.slides);
@@ -529,6 +529,7 @@
 			//enable swipe events
 			enable_swipe : function() {
 				var $this = this;
+				settings = $this.settings;
 				//bind swipe events for moving to the next item
 				$('body').on('swipeup', function(e) {
 					//don't do anything
@@ -550,6 +551,30 @@
 					$this.slide_it();
 					return false;
 				});
+
+				if(settings.multi_dir) {
+					//bind swipe events for moving to the next item
+					$('body').on('swipeleft', function(e) {
+						//don't do anything
+						if (e.preventDefault) {
+							e.preventDefault();
+						}
+						$this.direction = 'r';
+						$this.slide_it();
+						return false;
+					});
+					
+					//bind swipe events for moving to the previous item
+					$('body').on('swiperight', function(e) {
+						//don't do anything
+						if (e.preventDefault) {
+							e.preventDefault();
+						}
+						$this.direction = 'l';
+						$this.slide_it();
+						return false;
+					});
+				}
 			},
 
 			//add event to slide nav
@@ -637,7 +662,6 @@
 					var total_slides = $(this).find(settings.slides).length;
 					$(this).data('slides',total_slides);
 				});
-				$this.bind_multi_dir_events();
 			},
 
 			//styles for multi-directional  slideshow
@@ -659,40 +683,6 @@
 						'left' : '0px',
 						'top' : '0px'
 					});
-				});
-			},
-
-			//bind events for multi-directional slideshows
-			bind_multi_dir_events : function() {
-				var $this = this;
-				var settings = $this.settings;
-				if(settings.enable_swipe) {
-					$this.bind_left_right_swipe();
-				}
-			},
-
-			//set left/right swipe
-			bind_left_right_swipe : function() {
-				//bind swipe events for moving to the next item
-				$('body').on('swipeleft', function(e) {
-					//don't do anything
-					if (e.preventDefault) {
-						e.preventDefault();
-					}
-					$this.direction = 'l';
-					$this.slide_it();
-					return false;
-				});
-				
-				//bind swipe events for moving to the previous item
-				$('body').on('swiperight', function(e) {
-					//don't do anything
-					if (e.preventDefault) {
-						e.preventDefault();
-					}
-					$this.direction = 'r';
-					$this.slide_it();
-					return false;
 				});
 			},
 
@@ -744,6 +734,34 @@
 					}
 				}
 			}
+			// these aren't implemented yet, but I don't want to forget about them,
+
+			/*------------------------------------------------------------------------------
+			
+				methods for developers to access outside of the plug-in
+			
+			------------------------------------------------------------------------------*/
+			/*
+			//go to the next slide in the container
+			next_slide : function() {
+
+			},
+
+			//go to the previous slide in the container
+			prev_slide : function() {
+
+			},
+
+			//go to the next container
+			next_container : function() {
+
+			},
+
+			//go to the previous container
+			prev_container : function() {
+
+			}
+			*/
 		};
 
 	})(jQuery);

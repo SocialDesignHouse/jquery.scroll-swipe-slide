@@ -212,10 +212,15 @@ var swipe = $.event.swipe = {
 	 */
 	min : 30,
 	/**
-	 * @attribute threshhold
-	 * The distance on either side of the axes the pointer can travel. The default is 100 pixels.
+	 * @attribute v_threshhold
+	 * The distance on either side of the y-axis the pointer can travel. The default is 100 pixels.
 	 */
-	threshhold : 100
+	v_threshhold : 100,
+	/**
+	 * @attribute h_threshhold
+	 * The distance on either side of the x-axis the pointer can travel. The default is 130 pixels.
+	 */
+	h_threshhold : 130
 };
 
 $.event.setupHelper( [
@@ -264,7 +269,7 @@ $.event.setupHelper( [
 		if ( Math.abs( start.coords[0] - stop.coords[0] ) > 10 ) {
 			event.preventDefault();
 		}
-	};
+	}
 
 	// Attach to the touch move events
 	$(document.documentElement).bind(touchMoveEvent, moveHandler)
@@ -283,13 +288,14 @@ $.event.setupHelper( [
 					//check if we moved on both axes
 					if(deltaX >= swipe.min && deltaY >= swipe.min) {
 						//if we're within our Y axis threshhold, treat it as a swipe up/down
-						if(deltaX <= swipe.threshhold && deltaY >= swipe.min) {
+						if(deltaX <= swipe.v_threshhold && deltaX < deltaY) {
 							// based on the y coordinate check if we moved up or down
 							events.push( start.coords[1] < stop.coords[1] ? "swipedown" : "swipeup" );
 						} else
 						//if we're within our X axis threshhold, treat it as a swipe left/right
-						if(deltaY <= swipe.threshhold && deltaX >= swipe.min) {
-							events.push( start.coords[1] < stop.coords[1] ? "swipeleft" : "swiperight" );
+						if(deltaY <= swipe.threshhold && deltaX > deltaY) {
+							alert('swipeleft/swiperight');
+							events.push( start.coords[0] > stop.coords[0] ? "swipeleft" : "swiperight" );
 						}
 					} else
 					// check if we moved horizontally
@@ -305,14 +311,14 @@ $.event.setupHelper( [
 
 					// trigger swipe events on this guy
 					$.each($.event.find(delegate, events, selector), function(){
-						this.call(entered, ev, {start : start, end: stop})
-					})
+						this.call(entered, ev, {start : start, end: stop});
+					});
 				
 				}
 			}
 			// reset start and stop
 			start = stop = undefined;
-		})
+		});
 });
 
-})(jQuery)
+})(jQuery);
