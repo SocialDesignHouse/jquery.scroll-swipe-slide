@@ -69,13 +69,20 @@
 			use_keypress : true,
 			use_history : false, //requires History JS (this is included in the scripts folder)
 			base_url : '', //required if you want to use History JS
-			multi_dir : false, //not implemented yet
+			//true = slideshows to use vertical and horizontal movement
+			multi_dir : false,
+			//true = when scrolling to the left and right at the end of a container's slides, move to the next or previous container
+			go_to_next_container: false,
 			container : '.project',
+			//runs before switching containers
 			container_before : null,
+			//runs after switching containers
 			container_after : null,
 			slides : '.slide',
-			slides_before : null, //not implemented yet
-			slides_after : null, //not implemented yet
+			//runs before switching slides
+			slides_before : null,
+			//runs after switching slides
+			slides_after : null,
 			nav : '.slide-nav',
 			slideshow_class : '.slideshow',
 			easing : 'easeInOutExpo', //requires easing plug-in (this is included in the scrips folder)
@@ -86,6 +93,7 @@
 			height : '100%',
 			//if you have a title page that you don't want to include in your slides
 			skip_first : false,
+			//runs after initializing the slideshow
 			callback : null
 		};
 
@@ -273,7 +281,13 @@
 							$this.go_to = $(settings.container + ':eq(' + $this.container + ')').find('.current').next(settings.slides);
 							$this.slide_horizontal();
 						} else {
-							$this.scrolling = false;
+							if(settings.go_to_next_container && $(settings.container + ':eq(' + $this.container + ')').next(settings.container).length > 0) {
+								$this.go_to = $(settings.container + ':eq(' + $this.container + ')').next(settings.container);
+								$this.direction = 'd';
+								$this.slide_vertical();
+							} else {
+								$this.scrolling = false;
+							}
 						}
 					//going right
 					} else if($this.direction == 'l') {
@@ -282,7 +296,13 @@
 							$this.go_to = $(settings.container + ':eq(' + $this.container + ')').find('.current').prev(settings.slides);
 							$this.slide_horizontal();
 						} else {
-							$this.scrolling = false;
+							if(settings.go_to_next_container && $(settings.container + ':eq(' + $this.container + ')').prev(settings.container).length > 0) {
+								$this.go_to = $(settings.container + ':eq(' + $this.container + ')').prev(settings.container);
+								$this.direction = 'd';
+								$this.slide_vertical();
+							} else {
+								$this.scrolling = false;
+							}
 						}
 					}
 				}
@@ -311,7 +331,7 @@
 								//increment this_scroll
 								$this.this_scroll++;
 								scroll_timeout = setTimeout(function() { $this.scrolling = false; }, settings.scroll_lockout);
-								if(!$(settings.container + ':eq(' + index + ')').find('.current').length > 0) {
+								if($(settings.container + ':eq(' + index + ')').find('.current').length < 1) {
 									$(settings.container + ':eq(' + index + ')').find(settings.slides + ':first').addClass('current');
 								}
 							}
