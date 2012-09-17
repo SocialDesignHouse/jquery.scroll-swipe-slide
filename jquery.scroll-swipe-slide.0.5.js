@@ -254,14 +254,13 @@
 				var settings = $this.settings;
 				//make sure a direction has been specified
 				if($this.direction) {
-					//make sure we aren't firing other scroll events
-					$this.scrolling = true;
 					var $go_to, index;
 					//check the direction parameter so we can pass a value to the funcion that retrieves the element
 					//going up
 					if($this.direction == 'u') {
 						//if there is a previous item
 						if($(settings.slideshow_class).find('.active').prev(settings.container).length > 0) {
+							$this.scrolling = true;
 							$this.go_to = $(settings.slideshow_class).find('.active').prev(settings.container);
 							$this.slide_vertical();
 						} else {
@@ -271,6 +270,7 @@
 					} else if($this.direction == 'd') {
 						//if there is a next item
 						if($(settings.slideshow_class).find('.active').next(settings.container).length > 0) {
+							$this.scrolling = true;
 							$this.go_to = $(settings.slideshow_class).find('.active').next(settings.container);
 							$this.slide_vertical();
 						} else {
@@ -280,6 +280,7 @@
 					} else if($this.direction == 'r' && settings.multi_dir) {
 						//if there is a next item
 						if($(settings.container + ':eq(' + $this.container + ')').find('.current').next(settings.slides).length > 0) {
+							$this.scrolling = true;
 							$this.go_to = $(settings.container + ':eq(' + $this.container + ')').find('.current').next(settings.slides);
 							$this.slide_horizontal();
 						} else {
@@ -295,6 +296,7 @@
 					} else if($this.direction == 'l' && settings.multi_dir) {
 						//if there is a next item
 						if($(settings.container + ':eq(' + $this.container + ')').find('.current').prev(settings.slides).length > 0) {
+							$this.scrolling = true;
 							$this.go_to = $(settings.container + ':eq(' + $this.container + ')').find('.current').prev(settings.slides);
 							$this.slide_horizontal();
 						} else {
@@ -307,6 +309,8 @@
 							}
 						}
 					}
+				} else {
+					$this.scrolling = false;
 				}
 			},
 
@@ -492,6 +496,8 @@
 					if(!$this.settings.skip_first || $this.this_scroll > 0) {
 						//if we aren't already scrolling
 						if(!$this.scrolling) {
+							$this.this_scroll++;
+							console.log('this : ' + $this.this_scroll + ' | last: ' + $this.last_scroll);
 							//check to make sure that last_scroll and this_scroll aren't the same, unless they are 0 and this is the first scroll
 							if($this.this_scroll === 0 || $this.last_scroll != $this.this_scroll) {
 								//going up
@@ -505,15 +511,9 @@
 								}
 								//slide accordingly
 								$this.slide_it();
-							//last_scroll and this_scroll are the same
-							} else {
-								//don't fire
-								return false;
 							}
 							//increment last_scroll
 							$this.last_scroll = $this.this_scroll;
-						} else {
-							return false;
 						}
 					//if we were supposed to skip it
 					} else {
@@ -522,7 +522,6 @@
 						//increase the scroll counter
 						$this.this_scroll++;
 					}
-					return false;
 				});
 			},
 
