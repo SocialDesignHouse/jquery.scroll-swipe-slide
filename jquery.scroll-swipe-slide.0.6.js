@@ -8,7 +8,7 @@
  * @license		MIT
  * @link		http://socialdesignhouse.com/
  * @docs		http://socialdesignhouse.com/
- * @version		0.5
+ * @version		0.6
  * @deps		jQuery, jQuery Mousewheel
  * @optional		jQuery++ Swipe Events, jQuery Easing, History JS
  *			jQuery ScrollTo
@@ -254,7 +254,6 @@
 				var settings = $this.settings;
 				//make sure a direction has been specified
 				if($this.direction) {
-					var $go_to, index;
 					//check the direction parameter so we can pass a value to the funcion that retrieves the element
 					//going up
 					if($this.direction == 'u') {
@@ -321,7 +320,7 @@
 				if($this.go_to) {
 					var go_to = $this.go_to;
 					//set index for desired element
-					index = go_to.index();
+					var index = go_to.index();
 					$this.container = index;
 					if(settings.container_before) {
 						settings.container_before.call(this);
@@ -600,34 +599,24 @@
 			move_to : function() {
 				var $this = this;
 				var settings = $this.settings;
-				var go_to = $('.project:eq(' + $this.go_to + ')');
+				var go_to_this = $('.project:eq(' + $this.go_to + ')');
 				//make that slide active
-				$this.cotainer = $this.go_to;
-				/*if($this.slide === 0) {
-					$this.top = true;
-					$this.bottom = false;
-				} else if($this.slide == $(settings.nav).find('.slide-circle').length - 1) {
-					$this.bottom = true;
-					$this.top = false;
-				} else {
-					$this.bottom = false;
-					$this.bottom = false;
-				}*/
+				$this.container = $this.go_to;
 				if(settings.container_before) {
 					settings.container_before.call(this);
 				}
-				go_to.addClass('active');
-				go_to.find(settings.slides + ':first-child').addClass('current');
+				go_to_this.addClass('active');
+				go_to_this.find(settings.slides + ':first-child').addClass('current');
 				//scroll it
 				$(settings.slideshow_class).stop(true,true).scrollTo(
-					go_to, settings.scroll_time, {
+					go_to_this, settings.scroll_time, {
 						easing : settings.easing,
 						onAfter : function() {
 							var scroll_timeout = setTimeout(function() { $this.scrolling = false; }, settings.scroll_lockout);
 						}
 					}
 				);
-				$this.current = go_to;
+				$this.current = go_to_this;
 				$this.update_history();
 				if(settings.container_after) {
 					settings.container_after.call(this);
@@ -639,7 +628,6 @@
 				// Bind to StateChange Event
 				History.Adapter.bind(window, 'statechange', function() {
 					var State = History.getState();
-					//History.log(State.data, State.title, State.url);
 				});
 			},
 
