@@ -49,16 +49,17 @@
 			//what to do with each instance of the selector passed to the class
 			return this.each(function() {
 				//save $(this) and settings to variables for quicker referencing
-				var $elem = $(this);
+				var elem = $(this);
 				var $settings = jQuery.extend(true,{},settings);
 				//initialize class
 				var scrollswipeslide = new scrollSwipeSlide($settings);
 				//save the element to the object
-				scrollswipeslide.scrollswipeslide = $elem;
+				scrollswipeslide.scrollswipeslide = elem;
 				//initialize the object
 				scrollswipeslide.initialize();
 				//save information to data attribute on the element
-				$elem.data('_scrollSwipeSlide', scrollswipeslide);
+				elem.data('_scrollSwipeSlide', scrollswipeslide);
+				console.log(elem.data('_scrollSwipeSlide'));
 			});
 		};
 
@@ -104,7 +105,12 @@
 			return this;
 		}
 
-		//set up object methods
+		/*------------------------------------------------------------------------------
+		
+			Plug-in Methods
+		
+		------------------------------------------------------------------------------*/
+
 		scrollSwipeSlide.prototype = {
 			
 			//set up this instance
@@ -238,7 +244,7 @@
 					if(i === 0) {
 						add_class = ' active';
 					}
-					nav += '<li class="slide-circle' + add_class + '"></li>';
+					nav += '<li class="slide-circle' + add_class + '"><a href="javascript:void(0);"></a></li>';
 				}
 				var which_con = settings.container + ':first-child';
 				$(which_con).addClass('active');
@@ -447,34 +453,37 @@
 					if (e.preventDefault) {
 						e.preventDefault();
 					}
-					//get keycode
-					var key = e.which;
-					//if we aren't currently scrolling
-					if(!$this.scrolling) {
-						$this.direction = '';
-						//down arrow and page down keys
-						if(key == 40 || key == 34) {
-							//set direction to down
-							$this.direction = 'd';
-						//up arrow, and page up keys
-						} else if(key == 38 || key == 33) {
-							//set direction to up
-							$this.direction = 'u';
-						//home and end keys
-						} else if(key == 36 || key ==35) {
-							//don't scroll
-							return false;
-						//if we are going both directions and hit left arrow key
-						} else if(settings.multi_dir && key == 37) {
-							//set direction to left
-							$this.direction = 'l';
-						//if we are going both directions and hit right arrow key
-						} else if(settings.multi_dir && key == 39) {
-							//set direction to right
-							$this.direction = 'r';
+					//in case the user has toggled the use_keys option, we need to check again
+					if(settings.use_keys) {
+						//get keycode
+						var key = e.which;
+						//if we aren't currently scrolling
+						if(!$this.scrolling) {
+							$this.direction = '';
+							//down arrow and page down keys
+							if(key == 40 || key == 34) {
+								//set direction to down
+								$this.direction = 'd';
+							//up arrow, and page up keys
+							} else if(key == 38 || key == 33) {
+								//set direction to up
+								$this.direction = 'u';
+							//home and end keys
+							} else if(key == 36 || key ==35) {
+								//don't scroll
+								return false;
+							//if we are going both directions and hit left arrow key
+							} else if(settings.multi_dir && key == 37) {
+								//set direction to left
+								$this.direction = 'l';
+							//if we are going both directions and hit right arrow key
+							} else if(settings.multi_dir && key == 39) {
+								//set direction to right
+								$this.direction = 'r';
+							}
+							//move the page
+							$this.slide_it();
 						}
-						//move the page
-						$this.slide_it();
 					}
 					return false;
 				});
@@ -525,50 +534,53 @@
 			enable_swipe : function() {
 				var $this = this;
 				settings = $this.settings;
-				//bind swipe events for moving to the next item
-				$('body').on('swipeup', function(e) {
-					//don't do anything
-					if (e.preventDefault) {
-						e.preventDefault();
-					}
-					$this.direction = 'd';
-					$this.slide_it();
-					return false;
-				});
-				
-				//bind swipe events for moving to the previous item
-				$('body').on('swipedown', function(e) {
-					//don't do anything
-					if (e.preventDefault) {
-						e.preventDefault();
-					}
-					$this.direction = 'u';
-					$this.slide_it();
-					return false;
-				});
-
-				if(settings.multi_dir) {
+				//in case the user has toggled the use_swipe option, we need to check for it again
+				if(settings.use_swipe) {
 					//bind swipe events for moving to the next item
-					$('body').on('swipeleft', function(e) {
+					$('body').on('swipeup', function(e) {
 						//don't do anything
 						if (e.preventDefault) {
 							e.preventDefault();
 						}
-						$this.direction = 'r';
+						$this.direction = 'd';
 						$this.slide_it();
 						return false;
 					});
 					
 					//bind swipe events for moving to the previous item
-					$('body').on('swiperight', function(e) {
+					$('body').on('swipedown', function(e) {
 						//don't do anything
 						if (e.preventDefault) {
 							e.preventDefault();
 						}
-						$this.direction = 'l';
+						$this.direction = 'u';
 						$this.slide_it();
 						return false;
 					});
+
+					if(settings.multi_dir) {
+						//bind swipe events for moving to the next item
+						$('body').on('swipeleft', function(e) {
+							//don't do anything
+							if (e.preventDefault) {
+								e.preventDefault();
+							}
+							$this.direction = 'r';
+							$this.slide_it();
+							return false;
+						});
+						
+						//bind swipe events for moving to the previous item
+						$('body').on('swiperight', function(e) {
+							//don't do anything
+							if (e.preventDefault) {
+								e.preventDefault();
+							}
+							$this.direction = 'l';
+							$this.slide_it();
+							return false;
+						});
+					}
 				}
 			},
 
@@ -717,35 +729,43 @@
 						settings.slides_after.call(this);
 					}
 				}
-			}
-			// these aren't implemented yet, but I don't want to forget about them,
+			},
 
 			/*------------------------------------------------------------------------------
-			
-				methods for developers to access outside of the plug-in
-			
+
+				Methods for developers to access outside of the plug-in
+
 			------------------------------------------------------------------------------*/
-			/*
+				
 			//go to the next slide in the container
 			next_slide : function() {
-
+				//not implemented yet
 			},
 
 			//go to the previous slide in the container
 			prev_slide : function() {
-
+				//not implemented yet
 			},
 
 			//go to the next container
 			next_container : function() {
-
+				//not implemented yet
 			},
 
 			//go to the previous container
 			prev_container : function() {
+				//not impelemented yet
+			},
 
+			//go to a specified container index
+			go_to_container : function(i) {
+				//not implemented yet
+			},
+
+			//go to a specified slide in the container
+			go_to_slide : function(i) {
+				//not implemented yet
 			}
-			*/
 		};
 
 	})(jQuery);
