@@ -25,21 +25,45 @@
 				settings = option;
 			//if scrollSwipeSlide was called with an option name
 			} else if(typeof option === 'string') {
-				//return the value of that option
-				var data = this.data('_scrollSwipeSlide');
-				if(data) {
-					if($.fn.scrollSwipeSlide.default_settings[option] !== undefined) {
-						if(settings !== undefined) {
-							data.settings[option] = settings;
-							return true;
+				//check for method parameters first
+				switch(option) {
+					case 'next_slide' :
+						//not yet
+					case 'prev_slide' :
+						//not yet
+					case 'next_con' :
+						//not yet
+					case 'prev_con' :
+						//not yet
+					default :
+						//return the value of that option
+						var data = this.data('_scrollSwipeSlide');
+						if(data) {
+							if($.fn.scrollSwipeSlide.default_settings[option] !== undefined) {
+								if(settings !== undefined) {
+									data.settings[option] = settings;
+									return true;
+								} else {
+									return data.settings[option];
+								}
+							} else {
+								return false;
+							}
 						} else {
-							return data.settings[option];
+							return false;
 						}
-					} else {
-						return false;
-					}
-				} else {
+				}
+			//if we're sent a  slide index we want to move to it
+			} else if(typeof option === 'number') {
+				var index = option;
+				//check for instance
+				var instance = this.data('_scrollSwipeSlide');
+				//if no options were found, we can't do anything
+				if(!instance) {
 					return false;
+				} else {
+					instance.go_to = index;
+					instance.switch_nav(index);
 				}
 			}
 
@@ -59,9 +83,12 @@
 				scrollswipeslide.initialize();
 				//save information to data attribute on the element
 				elem.data('_scrollSwipeSlide', scrollswipeslide);
-				console.log(elem.data('_scrollSwipeSlide'));
 			});
 		};
+
+		function handle_args(obj, option) {
+
+		}
 
 		//set up default options
 		$.fn.scrollSwipeSlide.default_settings = {
@@ -69,6 +96,7 @@
 			use_swipe : true, //requires a swipe events plug-in (jQuery++ Swipe Events with swipe variation threshhold is included in the scripts folder)
 			use_keypress : true,
 			use_history : false, //requires History JS (this is included in the scripts folder)
+			enable_scroll : false,
 			base_url : '', //required if you want to use History JS
 			//true = slideshows to use vertical and horizontal movement
 			multi_dir : false,
@@ -424,22 +452,29 @@
 			//disable scroll
 			disable_scroll : function() {
 				var $this = this;
+				var settings = $this.settings;
 				//on window scroll
 				$(window).scroll(function(e) {
-					//don't do anything
-					if (e.preventDefault) {
-						e.preventDefault();
+					//check if enable_scroll has been toggled by the user
+					if(!settings.enable_scroll) {
+						//don't do anything
+						if (e.preventDefault) {
+							e.preventDefault();
+						}
+						return false;
 					}
-					return false;
 				});
 
 				//stop ios touchmove events from messing things up
 				$(document).on('touchmove', function(e) {
-					//don't do anything
-					if (e.preventDefault) {
-						e.preventDefault();
+					//check if enable_scroll has been toggled by the user
+					if(!settings.enable_scroll) {
+						//don't do anything
+						if (e.preventDefault) {
+							e.preventDefault();
+						}
+						return false;
 					}
-					return false;
 				});
 			},
 
@@ -534,10 +569,10 @@
 			enable_swipe : function() {
 				var $this = this;
 				settings = $this.settings;
-				//in case the user has toggled the use_swipe option, we need to check for it again
-				if(settings.use_swipe) {
-					//bind swipe events for moving to the next item
-					$('body').on('swipeup', function(e) {
+				//bind swipe events for moving to the next item
+				$('body').on('swipeup', function(e) {
+					//in case the user has toggled the use_swipe option, we need to check for it again
+					if(settings.use_swipe) {
 						//don't do anything
 						if (e.preventDefault) {
 							e.preventDefault();
@@ -545,10 +580,11 @@
 						$this.direction = 'd';
 						$this.slide_it();
 						return false;
-					});
-					
-					//bind swipe events for moving to the previous item
-					$('body').on('swipedown', function(e) {
+					}
+				//bind swipe events for moving to the previous item
+				}).on('swipedown', function(e) {
+					//in case the user has toggled the use_swipe option, we need to check for it again
+					if(settings.use_swipe) {
 						//don't do anything
 						if (e.preventDefault) {
 							e.preventDefault();
@@ -556,11 +592,13 @@
 						$this.direction = 'u';
 						$this.slide_it();
 						return false;
-					});
-
-					if(settings.multi_dir) {
-						//bind swipe events for moving to the next item
-						$('body').on('swipeleft', function(e) {
+					}
+				});
+				if(settings.multi_dir) {
+					//bind swipe events for moving to the next item
+					$('body').on('swipeleft', function(e) {
+						//in case the user has toggled the use_swipe option or multi_dir option, we need to check them again
+						if(settings.use_swipe && settings.multi_dir) {
 							//don't do anything
 							if (e.preventDefault) {
 								e.preventDefault();
@@ -568,10 +606,11 @@
 							$this.direction = 'r';
 							$this.slide_it();
 							return false;
-						});
-						
-						//bind swipe events for moving to the previous item
-						$('body').on('swiperight', function(e) {
+						}
+					//bind swipe events for moving to the previous item
+					}).on('swiperight', function(e) {
+						//in case the user has toggled the use_swipe option or multi_dir option, we need to check them again
+						if(settings.use_swipe && settings.multi_dir) {
 							//don't do anything
 							if (e.preventDefault) {
 								e.preventDefault();
@@ -579,8 +618,8 @@
 							$this.direction = 'l';
 							$this.slide_it();
 							return false;
-						});
-					}
+						}
+					});
 				}
 			},
 
@@ -589,22 +628,31 @@
 				var $this = this;
 				//on nav click
 				$('body').on('click', '.slide-circle', function(e) {
-					//if they didn't click on the already active nav element
-					if(!$(this).hasClass('active')) {
-						//unset the active element
-						$(this).parent().find('.active').removeClass('active');
-						//make this element active
-						$(this).addClass('active');
-						//unset the active slide
-						$('.slideshow').find('.active').removeClass('active');
-						//get the corresponding index
-						$this.go_to = $(this).index();
-						//move to slide
-						$this.move_to();
-					} else {
-						return false;
-					}
+					var that = $(this).index();
+					switch_nav(that);
 				});
+			},
+
+			//switch active state on nav
+			switch_nav : function (that) {
+				var $this = this;
+				var settings = $this.settings;
+				var elem = $(settings.nav).find('.slide-circle:eq(' + that + ')');
+				//if they didn't click on the already active nav element
+				if(!elem.hasClass('active')) {
+					//unset the active element
+					elem.parent().find('.active').removeClass('active');
+					//make this element active
+					elem.addClass('active');
+					//unset the active slide
+					$(settings.slideshow_class).find('.active').removeClass('active');
+					//get the corresponding index
+					elem.go_to = $(this).index();
+					//move to slide
+					$this.move_to();
+				} else {
+					return false;
+				}
 			},
 
 			//move slideshow to given slide
@@ -729,42 +777,6 @@
 						settings.slides_after.call(this);
 					}
 				}
-			},
-
-			/*------------------------------------------------------------------------------
-
-				Methods for developers to access outside of the plug-in
-
-			------------------------------------------------------------------------------*/
-				
-			//go to the next slide in the container
-			next_slide : function() {
-				//not implemented yet
-			},
-
-			//go to the previous slide in the container
-			prev_slide : function() {
-				//not implemented yet
-			},
-
-			//go to the next container
-			next_container : function() {
-				//not implemented yet
-			},
-
-			//go to the previous container
-			prev_container : function() {
-				//not impelemented yet
-			},
-
-			//go to a specified container index
-			go_to_container : function(i) {
-				//not implemented yet
-			},
-
-			//go to a specified slide in the container
-			go_to_slide : function(i) {
-				//not implemented yet
 			}
 		};
 
