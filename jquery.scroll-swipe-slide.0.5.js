@@ -334,8 +334,6 @@
 						go_to, settings.scroll_time, {
 							easing : settings.easing,
 							onAfter : function() {
-								//increment this_scroll
-								$this.this_scroll++;
 								scroll_timeout = setTimeout(function() { $this.scrolling = false; }, settings.scroll_lockout);
 								if($(settings.container + ':eq(' + index + ')').find('.current').length < 1) {
 									$(settings.container + ':eq(' + index + ')').find(settings.slides + ':first').addClass('current');
@@ -497,7 +495,6 @@
 						//if we aren't already scrolling
 						if(!$this.scrolling) {
 							$this.this_scroll++;
-							console.log('this : ' + $this.this_scroll + ' | last: ' + $this.last_scroll);
 							//check to make sure that last_scroll and this_scroll aren't the same, unless they are 0 and this is the first scroll
 							if($this.this_scroll === 0 || $this.last_scroll != $this.this_scroll) {
 								//going up
@@ -606,7 +603,7 @@
 				var go_to = $('.project:eq(' + $this.go_to + ')');
 				//make that slide active
 				$this.cotainer = $this.go_to;
-				if($this.slide === 0) {
+				/*if($this.slide === 0) {
 					$this.top = true;
 					$this.bottom = false;
 				} else if($this.slide == $(settings.nav).find('.slide-circle').length - 1) {
@@ -615,7 +612,7 @@
 				} else {
 					$this.bottom = false;
 					$this.bottom = false;
-				}
+				}*/
 				if(settings.container_before) {
 					settings.container_before.call(this);
 				}
