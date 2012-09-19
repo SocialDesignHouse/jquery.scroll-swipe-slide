@@ -8,7 +8,7 @@
  * @license		MIT
  * @link		http://socialdesignhouse.com/
  * @docs		http://socialdesignhouse.com/
- * @version		0.6
+ * @version		0.7
  * @deps		jQuery, jQuery Mousewheel
  * @optional		jQuery++ Swipe Events, jQuery Easing, History JS
  *			jQuery ScrollTo
