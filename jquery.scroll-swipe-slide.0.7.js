@@ -251,8 +251,7 @@
 				var nav_height = 20 * $(settings.nav).find('.slide-circle').length;
 				var nav_pad = ($this.win_height - nav_height) / 2;
 				$(settings.nav).css({
-					'margin' : nav_pad + 'px 0',
-					'z-index' : 99999999999
+					'margin' : nav_pad + 'px 0'
 				});
 				if(settings.multi_dir) {
 					$this.multi_dir_css();
