@@ -631,7 +631,8 @@
 				//on nav click
 				$('body').on('click', '.slide-circle', function(e) {
 					var that = $(this).index();
-					switch_nav(that);
+					$this.go_to = that;
+					$this.switch_nav(that);
 				});
 			},
 
