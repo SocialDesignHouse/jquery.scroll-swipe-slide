@@ -487,7 +487,7 @@
 						e.preventDefault();
 					}
 					//in case the user has toggled the use_keys option, we need to check again
-					if(settings.use_keys) {
+					if(settings.use_keypress) {
 						//get keycode
 						var key = e.which;
 						//if we aren't currently scrolling
