@@ -23,6 +23,22 @@
 			//if scrollSwipeSlide was called with options
 			if(typeof option === 'object') {
 				settings = option;
+				//extend settings based on the defined defaults and what was provided in the class declaration
+				settings = $.extend({}, $.fn.scrollSwipeSlide.default_settings, settings || {});
+				//what to do with each instance of the selector passed to the class
+				return this.each(function() {
+				//save $(this) and settings to variables for quicker referencing
+				var elem = $(this);
+				var $settings = jQuery.extend(true,{},settings);
+				//initialize class
+				var scrollswipeslide = new scrollSwipeSlide($settings);
+				//save the element to the object
+				scrollswipeslide.scrollswipeslide = elem;
+				//initialize the object
+				scrollswipeslide.initialize();
+				//save information to data attribute on the element
+				elem.data('_scrollSwipeSlide', scrollswipeslide);
+			});
 			//if scrollSwipeSlide was called with an option name
 			} else if(typeof option === 'string') {
 				//check for method parameters first
@@ -66,24 +82,6 @@
 					instance.switch_nav(index);
 				}
 			}
-
-			//extend settings based on the defined defaults and what was provided in the class declaration
-			settings = $.extend({}, $.fn.scrollSwipeSlide.default_settings, settings || {});
-
-			//what to do with each instance of the selector passed to the class
-			return this.each(function() {
-				//save $(this) and settings to variables for quicker referencing
-				var elem = $(this);
-				var $settings = jQuery.extend(true,{},settings);
-				//initialize class
-				var scrollswipeslide = new scrollSwipeSlide($settings);
-				//save the element to the object
-				scrollswipeslide.scrollswipeslide = elem;
-				//initialize the object
-				scrollswipeslide.initialize();
-				//save information to data attribute on the element
-				elem.data('_scrollSwipeSlide', scrollswipeslide);
-			});
 		};
 
 		function handle_args(obj, option) {
@@ -527,40 +525,44 @@
 			//bind mousewheel
 			enable_mousewheel : function() {
 				var $this = this;
+				var settings = $this.settings;
 				//bind mousewheel to moving forward/backward
 				$('body').bind('mousewheel', function(e, delta) {
-					//don't perform default action
-					if (e.preventDefault) {
-						e.preventDefault();
-					}
-					//if we aren't supposed to skip the first scroll or we aren't on the first one
-					if(!$this.settings.skip_first || $this.this_scroll > 0) {
-						//if we aren't already scrolling
-						if(!$this.scrolling) {
-							$this.this_scroll++;
-							//check to make sure that last_scroll and this_scroll aren't the same, unless they are 0 and this is the first scroll
-							if($this.this_scroll === 0 || $this.last_scroll != $this.this_scroll) {
-								//going up
-								if(delta > 0) {
-									//set direction
-									$this.direction = 'u';
-								//going down
-								} else if(delta < 0) {
-									//set direction
-									$this.direction = 'd';
-								}
-								//slide accordingly
-								$this.slide_it();
-							}
-							//increment last_scroll
-							$this.last_scroll = $this.this_scroll;
+					//if the user has toggled scrolling, we need to check for it again
+					if(!settings.enable_scroll) {
+						//don't perform default action
+						if (e.preventDefault) {
+							e.preventDefault();
 						}
-					//if we were supposed to skip it
-					} else {
-						$this.scrolling = true;
-						var scroll_timeout = setTimeout(function() { $this.scrolling = false; }, 750);
-						//increase the scroll counter
-						$this.this_scroll++;
+						//if we aren't supposed to skip the first scroll or we aren't on the first one
+						if(!$this.settings.skip_first || $this.this_scroll > 0) {
+							//if we aren't already scrolling
+							if(!$this.scrolling) {
+								$this.this_scroll++;
+								//check to make sure that last_scroll and this_scroll aren't the same, unless they are 0 and this is the first scroll
+								if($this.this_scroll === 0 || $this.last_scroll != $this.this_scroll) {
+									//going up
+									if(delta > 0) {
+										//set direction
+										$this.direction = 'u';
+									//going down
+									} else if(delta < 0) {
+										//set direction
+										$this.direction = 'd';
+									}
+									//slide accordingly
+									$this.slide_it();
+								}
+								//increment last_scroll
+								$this.last_scroll = $this.this_scroll;
+							}
+						//if we were supposed to skip it
+						} else {
+							$this.scrolling = true;
+							var scroll_timeout = setTimeout(function() { $this.scrolling = false; }, 750);
+							//increase the scroll counter
+							$this.this_scroll++;
+						}
 					}
 				});
 			},
@@ -644,8 +646,6 @@
 					elem.parent().find('.active').removeClass('active');
 					//make this element active
 					elem.addClass('active');
-					//unset the active slide
-					$(settings.slideshow_class).find('.active').removeClass('active');
 					//get the corresponding index
 					elem.go_to = $(this).index();
 					//move to slide
@@ -660,6 +660,8 @@
 				var $this = this;
 				var settings = $this.settings;
 				var go_to_this = $('.project:eq(' + $this.go_to + ')');
+				//unset the active slide
+				$(settings.slideshow_class).find('.active').removeClass('active');
 				//make that slide active
 				$this.container = $this.go_to;
 				if(settings.container_before) {
