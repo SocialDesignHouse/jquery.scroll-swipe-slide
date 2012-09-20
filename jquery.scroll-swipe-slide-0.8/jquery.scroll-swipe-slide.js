@@ -8,7 +8,7 @@
  * @license		MIT
  * @link		http://socialdesignhouse.com/
  * @docs		http://socialdesignhouse.com/
- * @version		0.7
+ * @version		0.8
  * @deps		jQuery, jQuery Mousewheel
  * @optional		jQuery++ Swipe Events, jQuery Easing, History JS
  *			jQuery ScrollTo
@@ -45,12 +45,16 @@
 				switch(option) {
 					case 'next_slide' :
 						//not yet
+						break;
 					case 'prev_slide' :
 						//not yet
+						break;
 					case 'next_con' :
 						//not yet
+						break;
 					case 'prev_con' :
 						//not yet
+						break;
 					default :
 						//return the value of that option
 						var data = this.data('_scrollSwipeSlide');
@@ -278,113 +282,6 @@
 				'</nav>';
 				$this.scrollswipeslide.prepend(nav);
 			},
-			
-			//slide up or down
-			slide_it : function() {
-				var $this = this;
-				var settings = $this.settings;
-				//make sure a direction has been specified
-				if($this.direction) {
-					//check the direction parameter so we can pass a value to the funcion that retrieves the element
-					//going up
-					if($this.direction == 'u') {
-						//if there is a previous item
-						if($(settings.slideshow_class).find('.active').prev(settings.container).length > 0) {
-							$this.scrolling = true;
-							$this.go_to = $(settings.slideshow_class).find('.active').prev(settings.container);
-							$this.slide_vertical();
-						} else {
-							$this.scrolling = false;
-						}
-					//going down
-					} else if($this.direction == 'd') {
-						//if there is a next item
-						if($(settings.slideshow_class).find('.active').next(settings.container).length > 0) {
-							$this.scrolling = true;
-							$this.go_to = $(settings.slideshow_class).find('.active').next(settings.container);
-							$this.slide_vertical();
-						} else {
-							$this.scrolling = false;
-						}
-					//going left
-					} else if($this.direction == 'r' && settings.multi_dir) {
-						//if there is a next item
-						if($(settings.container + ':eq(' + $this.container + ')').find('.current').next(settings.slides).length > 0) {
-							$this.scrolling = true;
-							$this.go_to = $(settings.container + ':eq(' + $this.container + ')').find('.current').next(settings.slides);
-							$this.slide_horizontal();
-						} else {
-							if(settings.go_to_next_container && $(settings.container + ':eq(' + $this.container + ')').next(settings.container).length > 0) {
-								$this.go_to = $(settings.container + ':eq(' + $this.container + ')').next(settings.container);
-								$this.direction = 'd';
-								$this.slide_vertical();
-							} else {
-								$this.scrolling = false;
-							}
-						}
-					//going right
-					} else if($this.direction == 'l' && settings.multi_dir) {
-						//if there is a next item
-						if($(settings.container + ':eq(' + $this.container + ')').find('.current').prev(settings.slides).length > 0) {
-							$this.scrolling = true;
-							$this.go_to = $(settings.container + ':eq(' + $this.container + ')').find('.current').prev(settings.slides);
-							$this.slide_horizontal();
-						} else {
-							if(settings.go_to_next_container && $(settings.container + ':eq(' + $this.container + ')').prev(settings.container).length > 0) {
-								$this.go_to = $(settings.container + ':eq(' + $this.container + ')').prev(settings.container);
-								$this.direction = 'd';
-								$this.slide_vertical();
-							} else {
-								$this.scrolling = false;
-							}
-						}
-					}
-				} else {
-					$this.scrolling = false;
-				}
-			},
-
-			//move it up and down
-			slide_vertical : function() {
-				var $this = this;
-				var settings = $this.settings;
-				if($this.go_to) {
-					var go_to = $this.go_to;
-					//set index for desired element
-					var index = go_to.index();
-					$this.container = index;
-					if(settings.container_before) {
-						settings.container_before.call(this);
-					}
-					//switch active states on the nav
-					$(settings.nav).find('.active').removeClass('active');
-					$(settings.nav).find('.slide-circle:eq(' + index + ')').addClass('active');
-					//scroll
-					$(settings.slideshow_class).stop(true,true).scrollTo(
-						go_to, settings.scroll_time, {
-							easing : settings.easing,
-							onAfter : function() {
-								scroll_timeout = setTimeout(function() { $this.scrolling = false; }, settings.scroll_lockout);
-								if($(settings.container + ':eq(' + index + ')').find('.current').length < 1) {
-									$(settings.container + ':eq(' + index + ')').find(settings.slides + ':first').addClass('current');
-								}
-							}
-						}
-					);
-					//set history
-					$this.current = go_to;
-					$this.update_history();
-					//if we aren't already on the active item
-					$(settings.sldeshow_class).find('.active').find('.current').removeClass('current');
-					if(!go_to.hasClass('active')) {
-						$(settings.slideshow_class).find('.active').removeClass('active');
-						go_to.addClass('active');
-					}
-					if(settings.container_after) {
-						settings.container_after.call(this);
-					}
-				}
-			},
 
 			//update browser history
 			update_history : function() {
@@ -393,12 +290,13 @@
 					var $current = $this.current;
 					var id = $current.attr('id');
 					var title = $current.data('title');
-					var url = '/' + $current.data('slug');
+					var url = settings.base_url + $current.data('slug');
 					var year = $current.data('year');
 					var state_obj = {
 						id : id,
 						title : title,
-						year : year
+						year : year,
+						that : $this
 					};
 					History.pushState(state_obj, title, url);
 				} else {
@@ -428,10 +326,9 @@
 								//get the corresponding index
 								$this.container = $(this).index();
 								$this.go_to = $(this).index();
-								//move to slide
-								$this.move_to();
 							}
-							$this.move_to();
+							//move to slide
+							$this.switch_nav($this.go_to);
 							//exit the .each() loop
 							return false;
 						}
@@ -514,7 +411,8 @@
 								$this.direction = 'r';
 							}
 							//move the page
-							$this.slide_it();
+							//$this.slide_it();
+							$this.get_next();
 						}
 					}
 					return false;
@@ -550,7 +448,8 @@
 										$this.direction = 'd';
 									}
 									//slide accordingly
-									$this.slide_it();
+									//$this.slide_it();
+									$this.get_next();
 								}
 								//increment last_scroll
 								$this.last_scroll = $this.this_scroll;
@@ -579,7 +478,8 @@
 							e.preventDefault();
 						}
 						$this.direction = 'd';
-						$this.slide_it();
+						$this.get_next();
+						//$this.slide_it();
 						return false;
 					}
 				//bind swipe events for moving to the previous item
@@ -591,7 +491,8 @@
 							e.preventDefault();
 						}
 						$this.direction = 'u';
-						$this.slide_it();
+						$this.get_next();
+						//$this.slide_it();
 						return false;
 					}
 				});
@@ -605,7 +506,8 @@
 								e.preventDefault();
 							}
 							$this.direction = 'r';
-							$this.slide_it();
+							$this.get_next();
+							//$this.slide_it();
 							return false;
 						}
 					//bind swipe events for moving to the previous item
@@ -617,7 +519,8 @@
 								e.preventDefault();
 							}
 							$this.direction = 'l';
-							$this.slide_it();
+							$this.get_next();
+							//$this.slide_it();
 							return false;
 						}
 					});
@@ -627,12 +530,75 @@
 			//add event to slide nav
 			bind_nav : function() {
 				var $this = this;
+				var settings = $this.settings;
 				//on nav click
 				$('body').on('click', '.slide-circle', function(e) {
 					var that = $(this).index();
 					$this.go_to = that;
-					$this.switch_nav(that);
+					$this.current = $(settings.container + ':eq(' + that + ')');
+					$this.update_history();
 				});
+			},
+
+			//get next item
+			get_next : function() {
+				var $this = this;
+				var settings = $this.settings;
+				if($this.direction) {
+					var dir = $this.direction;
+					if(dir === 'u') {
+						//if there is a previous item
+						if($(settings.slideshow_class).find('.active').prev(settings.container).length > 0) {
+							$this.scrolling = true;
+							$this.current = $(settings.slideshow_class).find('.active').prev(settings.container);
+							$this.go_to = $this.current.index();
+						} else {
+							$this.scrolling = false;
+						}
+					} else if(dir === 'd') {
+						//if there is a next item
+						if($(settings.slideshow_class).find('.active').next(settings.container).length > 0) {
+							$this.scrolling = true;
+							$this.current = $(settings.slideshow_class).find('.active').next(settings.container);
+							$this.go_to = $this.current.index();
+						} else {
+							$this.scrolling = false;
+						}
+					} else if(dir === 'l' && settings.multi_dir) {
+						//if there is a next item
+						if($(settings.container + ':eq(' + $this.container + ')').find('.current').prev(settings.slides).length > 0) {
+							$this.scrolling = true;
+							$this.go_to = $(settings.container + ':eq(' + $this.container + ')').find('.current').prev(settings.slides);
+							$this.slide_horizontal();
+						} else {
+							if(settings.go_to_next_container && $(settings.container + ':eq(' + $this.container + ')').prev(settings.container).length > 0) {
+								$this.current = $(settings.container + ':eq(' + $this.container + ')').prev(settings.container);
+								$this.go_to = $this.current.index();
+								$this.direction = 'u';
+							} else {
+								$this.scrolling = false;
+							}
+						}
+					} else if(dir === 'r' && settings.multi_dir) {
+						//if there is a next item
+						if($(settings.container + ':eq(' + $this.container + ')').find('.current').next(settings.slides).length > 0) {
+							$this.scrolling = true;
+							$this.go_to = $(settings.container + ':eq(' + $this.container + ')').find('.current').next(settings.slides);
+							$this.slide_horizontal();
+						} else {
+							if(settings.go_to_next_container && $(settings.container + ':eq(' + $this.container + ')').next(settings.container).length > 0) {
+								$this.current = $(settings.container + ':eq(' + $this.container + ')').next(settings.container);
+								$this.go_to = $this.current.index();
+								$this.direction = 'd';
+							} else {
+								$this.scrolling = false;
+							}
+						}
+					}
+					$this.update_history();
+				} else {
+					return false;
+				}
 			},
 
 			//switch active state on nav
@@ -646,9 +612,8 @@
 					elem.parent().find('.active').removeClass('active');
 					//make this element active
 					elem.addClass('active');
-					//get the corresponding index
-					elem.go_to = $(this).index();
-					//move to slide
+					//get element
+					$this.current = $(settings.container + ':eq(' + that + ')');
 					$this.move_to();
 				} else {
 					return false;
@@ -659,37 +624,67 @@
 			move_to : function() {
 				var $this = this;
 				var settings = $this.settings;
-				var go_to_this = $('.project:eq(' + $this.go_to + ')');
-				//unset the active slide
-				$(settings.slideshow_class).find('.active').removeClass('active');
-				//make that slide active
-				$this.container = $this.go_to;
-				if(settings.container_before) {
-					settings.container_before.call(this);
-				}
-				go_to_this.addClass('active');
-				go_to_this.find(settings.slides + ':first-child').addClass('current');
-				//scroll it
-				$(settings.slideshow_class).stop(true,true).scrollTo(
-					go_to_this, settings.scroll_time, {
-						easing : settings.easing,
-						onAfter : function() {
-							var scroll_timeout = setTimeout(function() { $this.scrolling = false; }, settings.scroll_lockout);
-						}
+				//if($this.direction === 'u' || $this.direction === 'd') {
+					var go_to_this = $(settings.container + ':eq(' + $this.go_to + ')');
+					//unset the active slide
+					$(settings.slideshow_class).find('.active').removeClass('active');
+					//make that slide active
+					$this.container = $this.go_to;
+					if(settings.container_before) {
+						settings.container_before.call(this);
 					}
-				);
-				$this.current = go_to_this;
-				$this.update_history();
-				if(settings.container_after) {
-					settings.container_after.call(this);
-				}
+					go_to_this.addClass('active');
+					go_to_this.find(settings.slides + ':first-child').addClass('current');
+					//scroll it
+					$(settings.slideshow_class).stop(true,true).scrollTo(
+						go_to_this, settings.scroll_time, {
+							easing : settings.easing,
+							onAfter : function() {
+								var scroll_timeout = setTimeout(function() { $this.scrolling = false; }, settings.scroll_lockout);
+							}
+						}
+					);
+					$this.current = go_to_this;
+					//$this.update_history();
+					if(settings.container_after) {
+						settings.container_after.call(this);
+					}
+					//reset direction
+					$this.direction = '';
+				//}
 			},
 
 			//bind history statechange event
 			bind_statechange : function() {
+				var $this = this;
+				var settings = $this.settings;
 				// Bind to StateChange Event
 				History.Adapter.bind(window, 'statechange', function() {
 					var State = History.getState();
+					History.log('statechange:', State.data, State.title, State.url);
+					if(State.data.that) {
+						var $that = State.data.that;
+						//get path
+						var url = document.URL;
+						//if there is a trailing slash, remove it
+						if(url.substr(-1) == '/') {
+							url = url.substr(0, url.length - 1);
+						}
+						//get base length
+						var base_length = settings.base_url.length;
+						//remove base from url
+						var slug = url.substr(base_length);
+						//find the index of the container we need
+						$(settings.container).each(function() {
+							if($(this).data('slug') == slug) {
+								var go_to = $(this).index();
+								$this.go_to = go_to;
+								$this.switch_nav(go_to);
+								//exit the .each() loop
+								return false;
+							}
+						});
+					}
 				});
 			},
 
@@ -778,6 +773,8 @@
 					if(settings.slides_after) {
 						settings.slides_after.call(this);
 					}
+					//reset directon
+					$this.direction = '';
 				}
 			}
 		};
