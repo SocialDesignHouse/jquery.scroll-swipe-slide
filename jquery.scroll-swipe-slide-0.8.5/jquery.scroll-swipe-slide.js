@@ -8,7 +8,7 @@
  * @license		MIT
  * @link		http://socialdesignhouse.com/
  * @docs		http://socialdesignhouse.com/
- * @version		0.8
+ * @version		0.8.5
  * @deps		jQuery, jQuery Mousewheel
  * @optional		jQuery++ Swipe Events, jQuery Easing, History JS
  *			jQuery ScrollTo
@@ -87,10 +87,6 @@
 				}
 			}
 		};
-
-		function handle_args(obj, option) {
-
-		}
 
 		//set up default options
 		$.fn.scrollSwipeSlide.default_settings = {
@@ -295,8 +291,7 @@
 					var state_obj = {
 						id : id,
 						title : title,
-						year : year,
-						that : $this
+						year : year
 					};
 					History.pushState(state_obj, title, url);
 				} else {
@@ -661,30 +656,26 @@
 				// Bind to StateChange Event
 				History.Adapter.bind(window, 'statechange', function() {
 					var State = History.getState();
-					History.log('statechange:', State.data, State.title, State.url);
-					if(State.data.that) {
-						var $that = State.data.that;
-						//get path
-						var url = document.URL;
-						//if there is a trailing slash, remove it
-						if(url.substr(-1) == '/') {
-							url = url.substr(0, url.length - 1);
-						}
-						//get base length
-						var base_length = settings.base_url.length;
-						//remove base from url
-						var slug = url.substr(base_length);
-						//find the index of the container we need
-						$(settings.container).each(function() {
-							if($(this).data('slug') == slug) {
-								var go_to = $(this).index();
-								$this.go_to = go_to;
-								$this.switch_nav(go_to);
-								//exit the .each() loop
-								return false;
-							}
-						});
+					//get path
+					var url = document.URL;
+					//if there is a trailing slash, remove it
+					if(url.substr(-1) == '/') {
+						url = url.substr(0, url.length - 1);
 					}
+					//get base length
+					var base_length = settings.base_url.length;
+					//remove base from url
+					var slug = url.substr(base_length);
+					//find the index of the container we need
+					$(settings.container).each(function() {
+						if($(this).data('slug') == slug) {
+							var go_to = $(this).index();
+							$this.go_to = go_to;
+							$this.switch_nav(go_to);
+							//exit the .each() loop
+							return false;
+						}
+					});
 				});
 			},
 
