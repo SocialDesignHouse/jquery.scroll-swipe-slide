@@ -110,7 +110,9 @@
 			slides_before : '',
 			//runs after switching slides
 			slides_after : '',
+			center_nav : true,
 			nav : '.slide-nav',
+			nav_height : '10',
 			slideshow_class : '.slideshow',
 			easing : 'easeInOutExpo', //requires easing plug-in (this is included in the scrips folder)
 			//less than 1000 and it double scrolls when using Apple's inertial scrolling
@@ -199,6 +201,11 @@
 					$this.set_css();
 				});
 
+				//on load
+				$(window).load(function() {
+					$this.set_css();
+				});
+
 				$this.enable_mousewheel();
 				$this.bind_nav();
 
@@ -248,13 +255,15 @@
 					});
 				}
 				//set nav height and center it
-				var nav_height = 20 * $(settings.nav).find('.slide-circle').length;
-				var nav_pad = ($this.win_height - nav_height) / 2;
-				$(settings.nav).css({
-					'margin' : nav_pad + 'px 0'
-				});
-				if(settings.multi_dir) {
-					$this.multi_dir_css();
+				if(settings.center_nav) {
+					var nav_height = settings.nav_height * $(settings.nav).find('.slide-circle').length;
+					var nav_pad = ($this.win_height - nav_height) / 2;
+					$(settings.nav).css({
+						'margin' : nav_pad + 'px 0'
+					});
+					if(settings.multi_dir) {
+						$this.multi_dir_css();
+					}
 				}
 			},
 			
@@ -282,16 +291,17 @@
 			//update browser history
 			update_history : function() {
 				var $this = this;
+				var settings = $this.settings;
 				if($this.history) {
 					var $current = $this.current;
+					var slug = $current.data('slug');
 					var id = $current.attr('id');
+					var state_data = $current.data();
 					var title = $current.data('title');
 					var url = settings.base_url + $current.data('slug');
-					var year = $current.data('year');
 					var state_obj = {
 						id : id,
-						title : title,
-						year : year
+						atts : state_data
 					};
 					History.pushState(state_obj, title, url);
 				} else {
@@ -310,18 +320,7 @@
 					$(settings.container).each(function() {
 						if($(this).data('slug') == slug) {
 							$this.go_to = $(this).index();
-							var nav_element = '.slide-circle:eq(' + $this.go_to + ')';
-							if(!$(nav_element).hasClass('active')) {
-								//unset the active element
-								$(nav_element).parent().find('.active').removeClass('active');
-								//make this element active
-								$(nav_element).addClass('active');
-								//unset the active slide
-								$(settings.slideshow_class).find('.active').removeClass('active');
-								//get the corresponding index
-								$this.container = $(this).index();
-								$this.go_to = $(this).index();
-							}
+							$this.container = $(this).index();
 							//move to slide
 							$this.switch_nav($this.go_to);
 							//exit the .each() loop
@@ -656,8 +655,8 @@
 				// Bind to StateChange Event
 				History.Adapter.bind(window, 'statechange', function() {
 					var State = History.getState();
-					//get path
-					var url = document.URL;
+					//History.log(State.data, State.title, State.url);
+					var url = State.url;
 					//if there is a trailing slash, remove it
 					if(url.substr(-1) == '/') {
 						url = url.substr(0, url.length - 1);
