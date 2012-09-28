@@ -8,7 +8,7 @@
  * @license		MIT
  * @link		http://socialdesignhouse.com/
  * @docs		http://socialdesignhouse.com/
- * @version		0.8.5
+ * @version		0.9
  * @deps		jQuery, jQuery Mousewheel
  * @optional		jQuery++ Swipe Events, jQuery Easing, History JS
  *			jQuery ScrollTo
@@ -96,6 +96,12 @@
 			use_history : false, //requires History JS (this is included in the scripts folder)
 			enable_scroll : false,
 			base_url : '', //required if you want to use History JS
+			//used to display a certain title along with the data-title for each project/slide when using History JS
+			base_title : '',
+			//whether the base_title shows up before or after the data-title in the page's title
+			base_title_pos : 'after',
+			//what separator to use between the base_title and data-title
+			base_title_sep : ' | ',
 			//true = slideshows to use vertical and horizontal movement
 			multi_dir : false,
 			//true = when scrolling to the left and right at the end of a container's slides, move to the next or previous container
@@ -297,7 +303,18 @@
 					var slug = $current.data('slug');
 					var id = $current.attr('id');
 					var state_data = $current.data();
-					var title = $current.data('title');
+					var title;
+					if(settings.base_title) {
+						if(settings.base_title_pos === 'before') {
+							title = settings.base_title + settings.base_title_sep + $current.data('title');
+						} else if(settings.base_title_pos === 'after') {
+							title = $current.data('title') + settings.base_title_sep + settings.base_title;
+						} else {
+							title = $current.data('title');
+						}
+					} else {
+						title = $current.data('title');
+					}
 					var url = settings.base_url + $current.data('slug');
 					var state_obj = {
 						id : id,
