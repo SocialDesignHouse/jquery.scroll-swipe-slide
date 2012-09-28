@@ -96,6 +96,12 @@
 			use_history : false, //requires History JS (this is included in the scripts folder)
 			enable_scroll : false,
 			base_url : '', //required if you want to use History JS
+			//used to display a certain title along with the data-title for each project/slide when using History JS
+			base_title : '',
+			//whether the base_title shows up before or after the data-title in the page's title
+			base_title_pos : 'after',
+			//what separator to use between the base_title and data-title
+			base_title_sep : ' | ',
 			//true = slideshows to use vertical and horizontal movement
 			multi_dir : false,
 			//true = when scrolling to the left and right at the end of a container's slides, move to the next or previous container
@@ -110,7 +116,9 @@
 			slides_before : '',
 			//runs after switching slides
 			slides_after : '',
+			center_nav : true,
 			nav : '.slide-nav',
+			nav_height : '10',
 			slideshow_class : '.slideshow',
 			easing : 'easeInOutExpo', //requires easing plug-in (this is included in the scrips folder)
 			//less than 1000 and it double scrolls when using Apple's inertial scrolling
@@ -159,8 +167,8 @@
 				$this.scrolling = false;
 				$this.this_scroll = 0;
 				$this.last_scroll = 0;
-				$this.container = 0;
-				$this.slide = 0;
+				//$this.container = 0;
+				//$this.slide = 0;
 
 				//check if History is enabled
 				if(settings.use_history && settings.base_url) {
@@ -196,6 +204,11 @@
 				//on resize
 				$(window).resize(function() {
 					//reconfigure the slide size to fit the window
+					$this.set_css();
+				});
+
+				//on load
+				$(window).load(function() {
 					$this.set_css();
 				});
 
@@ -248,13 +261,15 @@
 					});
 				}
 				//set nav height and center it
-				var nav_height = 20 * $(settings.nav).find('.slide-circle').length;
-				var nav_pad = ($this.win_height - nav_height) / 2;
-				$(settings.nav).css({
-					'margin' : nav_pad + 'px 0'
-				});
-				if(settings.multi_dir) {
-					$this.multi_dir_css();
+				if(settings.center_nav) {
+					var nav_height = settings.nav_height * $(settings.nav).find('.slide-circle').length;
+					var nav_pad = ($this.win_height - nav_height) / 2;
+					$(settings.nav).css({
+						'margin' : nav_pad + 'px 0'
+					});
+					if(settings.multi_dir) {
+						$this.multi_dir_css();
+					}
 				}
 			},
 			
@@ -282,16 +297,43 @@
 			//update browser history
 			update_history : function() {
 				var $this = this;
+				var settings = $this.settings;
 				if($this.history) {
 					var $current = $this.current;
+					var slug = $current.data('slug');
 					var id = $current.attr('id');
-					var title = $current.data('title');
+					var state_data = $current.data();
+					var title;
+					if(settings.base_title) {
+						if(settings.base_title_pos === 'before') {
+							title = settings.base_title + settings.base_title_sep + $current.data('title');
+						} else if(settings.base_title_pos === 'after') {
+							title = $current.data('title') + settings.base_title_sep + settings.base_title;
+						} else {
+							title = $current.data('title');
+						}
+					} else {
+						title = $current.data('title');
+					}
 					var url = settings.base_url + $current.data('slug');
-					var year = $current.data('year');
+					if(settings.multi_dir) {
+						var url_index;
+						if($this.type == 'container' && $this.row_switch) {
+							$this.row_switch = false;
+							if($current.data('active-slide')) {
+								url_index = parseInt($current.data('active-slide'), '') + 1;
+							} else {
+								url_index = 1;
+							}
+						} else {
+							url_index = $this.slide + 1;
+						}
+						url += '/' + url_index;
+					}
 					var state_obj = {
 						id : id,
-						title : title,
-						year : year
+						atts : state_data,
+						type : $this.type
 					};
 					History.pushState(state_obj, title, url);
 				} else {
@@ -310,18 +352,7 @@
 					$(settings.container).each(function() {
 						if($(this).data('slug') == slug) {
 							$this.go_to = $(this).index();
-							var nav_element = '.slide-circle:eq(' + $this.go_to + ')';
-							if(!$(nav_element).hasClass('active')) {
-								//unset the active element
-								$(nav_element).parent().find('.active').removeClass('active');
-								//make this element active
-								$(nav_element).addClass('active');
-								//unset the active slide
-								$(settings.slideshow_class).find('.active').removeClass('active');
-								//get the corresponding index
-								$this.container = $(this).index();
-								$this.go_to = $(this).index();
-							}
+							$this.container = $(this).index();
 							//move to slide
 							$this.switch_nav($this.go_to);
 							//exit the .each() loop
@@ -329,11 +360,14 @@
 						}
 					});
 				} else {
+					$this.current = $(settings.container + ':first-child');
+					$this.container = 0;
+					$this.slide = 0;
 					if(!settings.skip_first) {
-						$this.current = $(settings.container + ':first-child');
 						$this.update_history();
 					}
 					$(settings.container + ':first-child').addClass('active');
+					$(settings.container + ':first-child').find(settings.slides + ':first-child').addClass('current');
 					return false;
 				}
 			},
@@ -530,6 +564,7 @@
 				$('body').on('click', '.slide-circle', function(e) {
 					var that = $(this).index();
 					$this.go_to = that;
+					$this.type = 'container';
 					$this.current = $(settings.container + ':eq(' + that + ')');
 					$this.update_history();
 				});
@@ -546,6 +581,7 @@
 						if($(settings.slideshow_class).find('.active').prev(settings.container).length > 0) {
 							$this.scrolling = true;
 							$this.current = $(settings.slideshow_class).find('.active').prev(settings.container);
+							$this.type = 'container';
 							$this.go_to = $this.current.index();
 						} else {
 							$this.scrolling = false;
@@ -555,6 +591,7 @@
 						if($(settings.slideshow_class).find('.active').next(settings.container).length > 0) {
 							$this.scrolling = true;
 							$this.current = $(settings.slideshow_class).find('.active').next(settings.container);
+							$this.type = 'container';
 							$this.go_to = $this.current.index();
 						} else {
 							$this.scrolling = false;
@@ -563,11 +600,15 @@
 						//if there is a next item
 						if($(settings.container + ':eq(' + $this.container + ')').find('.current').prev(settings.slides).length > 0) {
 							$this.scrolling = true;
+							$this.type = 'slide';
 							$this.go_to = $(settings.container + ':eq(' + $this.container + ')').find('.current').prev(settings.slides);
-							$this.slide_horizontal();
+							$this.slide = $this.go_to.index();
+						//	$this.slide_horizontal();
 						} else {
 							if(settings.go_to_next_container && $(settings.container + ':eq(' + $this.container + ')').prev(settings.container).length > 0) {
+								$this.row_switch = true;
 								$this.current = $(settings.container + ':eq(' + $this.container + ')').prev(settings.container);
+								$this.type = 'container';
 								$this.go_to = $this.current.index();
 								$this.direction = 'u';
 							} else {
@@ -577,12 +618,17 @@
 					} else if(dir === 'r' && settings.multi_dir) {
 						//if there is a next item
 						if($(settings.container + ':eq(' + $this.container + ')').find('.current').next(settings.slides).length > 0) {
+							console.log($(settings.container + ':eq(' + $this.container + ')').find('.current').next(settings.slides));
 							$this.scrolling = true;
+							$this.type = 'slide';
 							$this.go_to = $(settings.container + ':eq(' + $this.container + ')').find('.current').next(settings.slides);
-							$this.slide_horizontal();
+							$this.slide = $this.go_to.index();
+						//	$this.slide_horizontal();
 						} else {
 							if(settings.go_to_next_container && $(settings.container + ':eq(' + $this.container + ')').next(settings.container).length > 0) {
+								$this.row_switch = true;
 								$this.current = $(settings.container + ':eq(' + $this.container + ')').next(settings.container);
+								$this.type = 'container';
 								$this.go_to = $this.current.index();
 								$this.direction = 'd';
 							} else {
@@ -629,7 +675,10 @@
 						settings.container_before.call(this);
 					}
 					go_to_this.addClass('active');
-					go_to_this.find(settings.slides + ':first-child').addClass('current');
+					if(!go_to_this.find('.current').length) {
+						go_to_this.find(settings.slides + ':first-child').addClass('current');
+					}
+					go_to_this.data('active-slide', go_to_this.find('.current').index());
 					//scroll it
 					$(settings.slideshow_class).stop(true,true).scrollTo(
 						go_to_this, settings.scroll_time, {
@@ -656,8 +705,8 @@
 				// Bind to StateChange Event
 				History.Adapter.bind(window, 'statechange', function() {
 					var State = History.getState();
-					//get path
-					var url = document.URL;
+					//History.log(State.data, State.title, State.url);
+					var url = State.url;
 					//if there is a trailing slash, remove it
 					if(url.substr(-1) == '/') {
 						url = url.substr(0, url.length - 1);
@@ -666,16 +715,35 @@
 					var base_length = settings.base_url.length;
 					//remove base from url
 					var slug = url.substr(base_length);
+					//if we are supposed to be looking for the container and it's multi-directional
+					if(State.data.type == 'container' && settings.multi_dir) {
+						//remove the slide index from the url
+						var slash_pos = slug.lastIndexOf('/');
+						slug = slug.substr(0, slash_pos);
+					}
 					//find the index of the container we need
+					var found = false;
 					$(settings.container).each(function() {
 						if($(this).data('slug') == slug) {
 							var go_to = $(this).index();
 							$this.go_to = go_to;
 							$this.switch_nav(go_to);
+							found = true;
 							//exit the .each() loop
 							return false;
 						}
 					});
+					//if we didn't find a slug match in a container
+					if(!found && settings.multi_dir) {
+						//find position of last slash and add 1 to it
+						var last_slash = slug.lastIndexOf('/') + 1;
+						//make slide_slug equal to everything after the last slash
+						var slide_index = slug.substr(last_slash);
+						//get the actual index of the slide from the slug by subtracting 1
+						slide_index = parseInt(slide_index, '') - 1;
+						$this.go_to = slide_index;
+						$this.slide_horizontal();
+					}
 				});
 			},
 
@@ -722,20 +790,33 @@
 			slide_horizontal : function() {
 				var $this = this;
 				var settings = $this.settings;
-				if($this.go_to) {
+				if(typeof $this.go_to !== 'undefined') {
 					var move = '';
-					var go_to = $this.go_to;
+					var go_to;
 					//set index for desired element
-					$this.slide = go_to.index();
+					if(typeof $this.go_to !== 'number') {
+						$this.slide = $this.go_to.index();
+						go_to = $this.go_to;
+					} else {
+						$this.slide = $this.go_to;
+						go_to = $(settings.container + ':eq(' + $this.container +')').find(settings.slides + ':eq(' + $this.go_to + ')');
+					}
+					if(typeof $this.container === 'undefined') {
+						$this.container = go_to.parent().index();
+					}
 					if(settings.slides_before) {
 						settings.slides_before.call(this);
 					}
+					go_to.siblings().each(function() {
+						if($(this).hasClass('current')) {
+							$(this).removeClass('current');
+						}
+					});
+					go_to.parent().data('active-slide', $this.slide);
 					//switch active states on the nav
 						//switch thumbnail active state here
 					//scroll
-					//$(settings.container + ':eq(' + $this.container + ')').stop(true,true).
 					var left = $(settings.container + ':eq(' + $this.container + ')').offset().left;
-					//var left = $this.win_width * $this.slide;
 					if(left != '0px') {
 						if($this.direction == 'r') {
 							move = left - $this.win_width;
@@ -752,15 +833,11 @@
 							},
 							ease : Expo.easeInOut,
 							onComplete : function() {
-								scroll_timeout = setTimeout(function() { $this.scrolling = false; }, settings.scroll_lockout);
+								var scroll_timeout = setTimeout(function() { $this.scrolling = false; }, settings.scroll_lockout);
 							}
 						}
 					);
-					//if we aren't already on the active item
-					if(!go_to.hasClass('current')) {
-						$(settings.container + ':eq(' + $this.container + ')').find('.current').removeClass('current');
-						$(settings.container + ':eq(' + $this.container + ')').find(settings.slides + ':eq(' + $this.slide + ')').addClass('current');
-					}
+					go_to.addClass('current');
 					if(settings.slides_after) {
 						settings.slides_after.call(this);
 					}
