@@ -388,7 +388,7 @@
 				var $this = this;
 				var settings = $this.settings;
 				//on keypress
-				$(document).keyup(function(e) {
+				$(document).keydown(function(e) {
 					//prevent normal action
 					if (e.preventDefault) {
 						e.preventDefault();
