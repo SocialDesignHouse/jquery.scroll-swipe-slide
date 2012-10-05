@@ -8,12 +8,12 @@
  * @license		MIT
  * @link		http://socialdesignhouse.com/
  * @docs		http://socialdesignhouse.com/
- * @version		0.9
- * @deps		jQuery, jQuery Mousewheel
- * @optional		jQuery++ Swipe Events, jQuery Easing, History JS
- *			jQuery ScrollTo
+ * @version		0.9.5
+ * @deps		jQuery, jQuery Mousewheel, History JS
+ * @optional	jQuery++ Swipe Events (custom build), jQuery Easing
+ *				jQuery ScrollTo
  *
-=================================================================*/
+===================================================================*/
 
 	//close out any previous JS with a semi-colon, just in case
 	;(function($) {
@@ -167,8 +167,8 @@
 				$this.scrolling = false;
 				$this.this_scroll = 0;
 				$this.last_scroll = 0;
-				$this.container = 0;
-				$this.slide = 0;
+				//$this.container = 0;
+				//$this.slide = 0;
 
 				//check if History is enabled
 				if(settings.use_history && settings.base_url) {
@@ -298,7 +298,7 @@
 			update_history : function() {
 				var $this = this;
 				var settings = $this.settings;
-				if($this.history) {
+				if($this.history && $this.scrolling || $this.history && $this.row_switch) {
 					var $current = $this.current;
 					var slug = $current.data('slug');
 					var id = $current.attr('id');
@@ -316,9 +316,24 @@
 						title = $current.data('title');
 					}
 					var url = settings.base_url + $current.data('slug');
+					if(settings.multi_dir) {
+						var url_index;
+						if($this.type == 'container' && $this.row_switch) {
+							$this.row_switch = false;
+							if($current.data('active-slide')) {
+								url_index = parseInt($current.data('active-slide'), '') + 1;
+							} else {
+								url_index = 1;
+							}
+						} else {
+							url_index = $this.slide + 1;
+						}
+						url += '/' + url_index;
+					}
 					var state_obj = {
 						id : id,
-						atts : state_data
+						atts : state_data,
+						type : $this.type
 					};
 					History.pushState(state_obj, title, url);
 				} else {
@@ -345,11 +360,14 @@
 						}
 					});
 				} else {
+					$this.current = $(settings.container + ':first-child');
+					$this.container = 0;
+					$this.slide = 0;
 					if(!settings.skip_first) {
-						$this.current = $(settings.container + ':first-child');
 						$this.update_history();
 					}
 					$(settings.container + ':first-child').addClass('active');
+					$(settings.container + ':first-child').find(settings.slides + ':first-child').addClass('current');
 					return false;
 				}
 			},
@@ -546,6 +564,7 @@
 				$('body').on('click', '.slide-circle', function(e) {
 					var that = $(this).index();
 					$this.go_to = that;
+					$this.type = 'container';
 					$this.current = $(settings.container + ':eq(' + that + ')');
 					$this.update_history();
 				});
@@ -559,31 +578,36 @@
 					var dir = $this.direction;
 					if(dir === 'u') {
 						//if there is a previous item
-						if($(settings.slideshow_class).find('.active').prev(settings.container).length > 0) {
+						if($(settings.slideshow_class).find('.active').prev(settings.container).length) {
 							$this.scrolling = true;
 							$this.current = $(settings.slideshow_class).find('.active').prev(settings.container);
+							$this.type = 'container';
 							$this.go_to = $this.current.index();
 						} else {
 							$this.scrolling = false;
 						}
 					} else if(dir === 'd') {
 						//if there is a next item
-						if($(settings.slideshow_class).find('.active').next(settings.container).length > 0) {
+						if($(settings.slideshow_class).find('.active').next(settings.container).length) {
 							$this.scrolling = true;
 							$this.current = $(settings.slideshow_class).find('.active').next(settings.container);
+							$this.type = 'container';
 							$this.go_to = $this.current.index();
 						} else {
 							$this.scrolling = false;
 						}
 					} else if(dir === 'l' && settings.multi_dir) {
 						//if there is a next item
-						if($(settings.container + ':eq(' + $this.container + ')').find('.current').prev(settings.slides).length > 0) {
+						if($(settings.container + ':eq(' + $this.container + ')').find('.current').prev(settings.slides).length) {
 							$this.scrolling = true;
+							$this.type = 'slide';
 							$this.go_to = $(settings.container + ':eq(' + $this.container + ')').find('.current').prev(settings.slides);
-							$this.slide_horizontal();
+							$this.slide = $this.go_to.index();
 						} else {
-							if(settings.go_to_next_container && $(settings.container + ':eq(' + $this.container + ')').prev(settings.container).length > 0) {
+							if(settings.go_to_next_container && $(settings.container + ':eq(' + $this.container + ')').prev(settings.container).length) {
+								$this.row_switch = true;
 								$this.current = $(settings.container + ':eq(' + $this.container + ')').prev(settings.container);
+								$this.type = 'container';
 								$this.go_to = $this.current.index();
 								$this.direction = 'u';
 							} else {
@@ -592,13 +616,16 @@
 						}
 					} else if(dir === 'r' && settings.multi_dir) {
 						//if there is a next item
-						if($(settings.container + ':eq(' + $this.container + ')').find('.current').next(settings.slides).length > 0) {
+						if($(settings.container + ':eq(' + $this.container + ')').find('.current').next(settings.slides).length) {
 							$this.scrolling = true;
+							$this.type = 'slide';
 							$this.go_to = $(settings.container + ':eq(' + $this.container + ')').find('.current').next(settings.slides);
-							$this.slide_horizontal();
+							$this.slide = $this.go_to.index();
 						} else {
-							if(settings.go_to_next_container && $(settings.container + ':eq(' + $this.container + ')').next(settings.container).length > 0) {
+							if(settings.go_to_next_container && $(settings.container + ':eq(' + $this.container + ')').next(settings.container).length) {
+								$this.row_switch = true;
 								$this.current = $(settings.container + ':eq(' + $this.container + ')').next(settings.container);
+								$this.type = 'container';
 								$this.go_to = $this.current.index();
 								$this.direction = 'd';
 							} else {
@@ -645,7 +672,10 @@
 						settings.container_before.call(this);
 					}
 					go_to_this.addClass('active');
-					go_to_this.find(settings.slides + ':first-child').addClass('current');
+					if(!go_to_this.find('.current').length) {
+						go_to_this.find(settings.slides + ':first-child').addClass('current');
+					}
+					go_to_this.data('active-slide', go_to_this.find('.current').index());
 					//scroll it
 					$(settings.slideshow_class).stop(true,true).scrollTo(
 						go_to_this, settings.scroll_time, {
@@ -682,16 +712,35 @@
 					var base_length = settings.base_url.length;
 					//remove base from url
 					var slug = url.substr(base_length);
+					//if we are supposed to be looking for the container and it's multi-directional
+					if(State.data.type == 'container' && settings.multi_dir) {
+						//remove the slide index from the url
+						var slash_pos = slug.lastIndexOf('/');
+						slug = slug.substr(0, slash_pos);
+					}
 					//find the index of the container we need
+					var found = false;
 					$(settings.container).each(function() {
 						if($(this).data('slug') == slug) {
 							var go_to = $(this).index();
 							$this.go_to = go_to;
 							$this.switch_nav(go_to);
+							found = true;
 							//exit the .each() loop
 							return false;
 						}
 					});
+					//if we didn't find a slug match in a container
+					if(!found && settings.multi_dir) {
+						//find position of last slash and add 1 to it
+						var last_slash = slug.lastIndexOf('/') + 1;
+						//make slide_slug equal to everything after the last slash
+						var slide_index = slug.substr(last_slash);
+						//get the actual index of the slide from the slug by subtracting 1
+						slide_index = parseInt(slide_index, '') - 1;
+						$this.go_to = slide_index;
+						$this.slide_horizontal();
+					}
 				});
 			},
 
@@ -738,20 +787,33 @@
 			slide_horizontal : function() {
 				var $this = this;
 				var settings = $this.settings;
-				if($this.go_to) {
+				if(typeof $this.go_to !== 'undefined') {
 					var move = '';
-					var go_to = $this.go_to;
+					var go_to;
 					//set index for desired element
-					$this.slide = go_to.index();
+					if(typeof $this.go_to !== 'number') {
+						$this.slide = $this.go_to.index();
+						go_to = $this.go_to;
+					} else {
+						$this.slide = $this.go_to;
+						go_to = $(settings.container + ':eq(' + $this.container +')').find(settings.slides + ':eq(' + $this.go_to + ')');
+					}
+					if(typeof $this.container === 'undefined') {
+						$this.container = go_to.parent().index();
+					}
 					if(settings.slides_before) {
 						settings.slides_before.call(this);
 					}
+					go_to.siblings().each(function() {
+						if($(this).hasClass('current')) {
+							$(this).removeClass('current');
+						}
+					});
+					go_to.parent().data('active-slide', $this.slide);
 					//switch active states on the nav
 						//switch thumbnail active state here
 					//scroll
-					//$(settings.container + ':eq(' + $this.container + ')').stop(true,true).
 					var left = $(settings.container + ':eq(' + $this.container + ')').offset().left;
-					//var left = $this.win_width * $this.slide;
 					if(left != '0px') {
 						if($this.direction == 'r') {
 							move = left - $this.win_width;
@@ -768,15 +830,11 @@
 							},
 							ease : Expo.easeInOut,
 							onComplete : function() {
-								scroll_timeout = setTimeout(function() { $this.scrolling = false; }, settings.scroll_lockout);
+								var scroll_timeout = setTimeout(function() { $this.scrolling = false; }, settings.scroll_lockout);
 							}
 						}
 					);
-					//if we aren't already on the active item
-					if(!go_to.hasClass('current')) {
-						$(settings.container + ':eq(' + $this.container + ')').find('.current').removeClass('current');
-						$(settings.container + ':eq(' + $this.container + ')').find(settings.slides + ':eq(' + $this.slide + ')').addClass('current');
-					}
+					go_to.addClass('current');
 					if(settings.slides_after) {
 						settings.slides_after.call(this);
 					}
