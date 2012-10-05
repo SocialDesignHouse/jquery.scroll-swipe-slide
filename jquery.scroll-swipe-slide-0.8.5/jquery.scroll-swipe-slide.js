@@ -8,12 +8,12 @@
  * @license		MIT
  * @link		http://socialdesignhouse.com/
  * @docs		http://socialdesignhouse.com/
- * @version		0.8.5
- * @deps		jQuery, jQuery Mousewheel
- * @optional		jQuery++ Swipe Events, jQuery Easing, History JS
- *			jQuery ScrollTo
+ * @version		0.9.5
+ * @deps		jQuery, jQuery Mousewheel, History JS
+ * @optional	jQuery++ Swipe Events (custom build), jQuery Easing
+ *				jQuery ScrollTo
  *
-=================================================================*/
+===================================================================*/
 
 	//close out any previous JS with a semi-colon, just in case
 	;(function($) {
@@ -298,7 +298,7 @@
 			update_history : function() {
 				var $this = this;
 				var settings = $this.settings;
-				if($this.history) {
+				if($this.history && $this.scrolling || $this.history && $this.row_switch) {
 					var $current = $this.current;
 					var slug = $current.data('slug');
 					var id = $current.attr('id');
@@ -578,7 +578,7 @@
 					var dir = $this.direction;
 					if(dir === 'u') {
 						//if there is a previous item
-						if($(settings.slideshow_class).find('.active').prev(settings.container).length > 0) {
+						if($(settings.slideshow_class).find('.active').prev(settings.container).length) {
 							$this.scrolling = true;
 							$this.current = $(settings.slideshow_class).find('.active').prev(settings.container);
 							$this.type = 'container';
@@ -588,7 +588,7 @@
 						}
 					} else if(dir === 'd') {
 						//if there is a next item
-						if($(settings.slideshow_class).find('.active').next(settings.container).length > 0) {
+						if($(settings.slideshow_class).find('.active').next(settings.container).length) {
 							$this.scrolling = true;
 							$this.current = $(settings.slideshow_class).find('.active').next(settings.container);
 							$this.type = 'container';
@@ -598,14 +598,13 @@
 						}
 					} else if(dir === 'l' && settings.multi_dir) {
 						//if there is a next item
-						if($(settings.container + ':eq(' + $this.container + ')').find('.current').prev(settings.slides).length > 0) {
+						if($(settings.container + ':eq(' + $this.container + ')').find('.current').prev(settings.slides).length) {
 							$this.scrolling = true;
 							$this.type = 'slide';
 							$this.go_to = $(settings.container + ':eq(' + $this.container + ')').find('.current').prev(settings.slides);
 							$this.slide = $this.go_to.index();
-						//	$this.slide_horizontal();
 						} else {
-							if(settings.go_to_next_container && $(settings.container + ':eq(' + $this.container + ')').prev(settings.container).length > 0) {
+							if(settings.go_to_next_container && $(settings.container + ':eq(' + $this.container + ')').prev(settings.container).length) {
 								$this.row_switch = true;
 								$this.current = $(settings.container + ':eq(' + $this.container + ')').prev(settings.container);
 								$this.type = 'container';
@@ -617,15 +616,13 @@
 						}
 					} else if(dir === 'r' && settings.multi_dir) {
 						//if there is a next item
-						if($(settings.container + ':eq(' + $this.container + ')').find('.current').next(settings.slides).length > 0) {
-							console.log($(settings.container + ':eq(' + $this.container + ')').find('.current').next(settings.slides));
+						if($(settings.container + ':eq(' + $this.container + ')').find('.current').next(settings.slides).length) {
 							$this.scrolling = true;
 							$this.type = 'slide';
 							$this.go_to = $(settings.container + ':eq(' + $this.container + ')').find('.current').next(settings.slides);
 							$this.slide = $this.go_to.index();
-						//	$this.slide_horizontal();
 						} else {
-							if(settings.go_to_next_container && $(settings.container + ':eq(' + $this.container + ')').next(settings.container).length > 0) {
+							if(settings.go_to_next_container && $(settings.container + ':eq(' + $this.container + ')').next(settings.container).length) {
 								$this.row_switch = true;
 								$this.current = $(settings.container + ':eq(' + $this.container + ')').next(settings.container);
 								$this.type = 'container';
