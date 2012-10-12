@@ -317,23 +317,31 @@
 					}
 					var url = settings.base_url + $current.data('slug');
 					if(settings.multi_dir) {
-						var url_index;
+						var slide_url;
+						//var url_index;
 						if($this.type == 'container' && $this.row_switch) {
 							$this.row_switch = false;
 							if($current.data('active-slide')) {
-								url_index = parseInt($current.data('active-slide'), '') + 1;
+								slide_url = $current.find(settings.slides + ':eq(' + parseInt($current.data('active-slide'), '') + ')').data('slug');
+								//url_index = parseInt($current.data('active-slide'), '') + 1;
 							} else {
-								url_index = 1;
+								slide_url = $current.find(settings.slides + ':eq(0)').data('slug');
+								//url_index = 1;
 							}
 						} else {
-							url_index = $this.slide + 1;
+							slide_url = $current.find(settings.slides + ':eq(' + $this.slide + ')');
+							//url_index = $this.slide + 1;
 						}
-						url += '/' + url_index;
+						url += '/' + slide_url;
+						//url += '/' + url_index;
 					}
 					var state_obj = {
 						id : id,
 						atts : state_data,
-						type : $this.type
+						type : $this.type,
+						container : $this.container,
+						slide : $this.slide,
+						direction : $this.direction
 					};
 					History.pushState(state_obj, title, url);
 				} else {
@@ -349,6 +357,13 @@
 				if(curr_url != settings.base_url) {
 					$this.skip_first = false;
 					var slug = curr_url.substring(settings.base_url.length, window.location.href.length - 1);
+					//check for trailing slash and remove it
+					if(slug.charAt(slug.length - 1) == '/') {
+						slug = slug.slice(0, -1);
+					}
+					//split url into array
+					var slug_array = slug.split('/');
+					console.log(slug_array[slug_array.length - 1]);
 					$(settings.container).each(function() {
 						if($(this).data('slug') == slug) {
 							$this.go_to = $(this).index();
@@ -702,7 +717,7 @@
 				// Bind to StateChange Event
 				History.Adapter.bind(window, 'statechange', function() {
 					var State = History.getState();
-					//History.log(State.data, State.title, State.url);
+					History.log(State.data, State.title, State.url);
 					var url = State.url;
 					//if there is a trailing slash, remove it
 					if(url.substr(-1) == '/') {
@@ -712,6 +727,8 @@
 					var base_length = settings.base_url.length;
 					//remove base from url
 					var slug = url.substr(base_length);
+					$this.container = State.data.container;
+					$this.slide = State.data.slide;
 					//if we are supposed to be looking for the container and it's multi-directional
 					if(State.data.type == 'container' && settings.multi_dir) {
 						//remove the slide index from the url
@@ -732,6 +749,14 @@
 					});
 					//if we didn't find a slug match in a container
 					if(!found && settings.multi_dir) {
+						if($('#' + State.data.id).hasClass('active')) {
+							var check_index = $('#' + State.data.id).find('.current').index();
+							if($this.slide > check_index && check_index <= $(settings.container + ':eq(' + $this.container + ')').find(settings.slides).length) {
+								$this.direction = 'r';
+							} else if($this.slide < check_index && check_index >= 0) {
+								$this.direction = 'l';
+							}
+						}
 						//find position of last slash and add 1 to it
 						var last_slash = slug.lastIndexOf('/') + 1;
 						//make slide_slug equal to everything after the last slash
@@ -788,17 +813,21 @@
 				var $this = this;
 				var settings = $this.settings;
 				if(typeof $this.go_to !== 'undefined') {
+					console.log('check 1');
 					var move = '';
 					var go_to;
 					//set index for desired element
 					if(typeof $this.go_to !== 'number') {
+						console.log('check 2');
 						$this.slide = $this.go_to.index();
 						go_to = $this.go_to;
 					} else {
+						console.log('check 3');
 						$this.slide = $this.go_to;
 						go_to = $(settings.container + ':eq(' + $this.container +')').find(settings.slides + ':eq(' + $this.go_to + ')');
 					}
 					if(typeof $this.container === 'undefined') {
+						console.log('check 4');
 						$this.container = go_to.parent().index();
 					}
 					if(settings.slides_before) {
@@ -815,14 +844,19 @@
 					//scroll
 					var left = $(settings.container + ':eq(' + $this.container + ')').offset().left;
 					if(left != '0px') {
+						console.log('check 6');
 						if($this.direction == 'r') {
+							console.log('check 7');
 							move = left - $this.win_width;
 						} else if($this.direction == 'l') {
+							console.log('check 8');
 							move = left + $this.win_width;
 						}
 					} else {
+						console.log('check 9');
 						move = 0;
 					}
+					console.log(move);
 					TweenMax.to(
 						$(settings.container + ':eq(' + $this.container + ')'), 0.8, {
 							css : {
