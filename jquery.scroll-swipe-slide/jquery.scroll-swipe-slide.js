@@ -8,7 +8,7 @@
  * @license		MIT
  * @link		http://socialdesignhouse.com/
  * @docs		http://socialdesignhouse.com/
- * @version		0.9.5
+ * @version		1.0
  * @deps		jQuery, jQuery Mousewheel, History JS
  * @optional	jQuery++ Swipe Events (custom build), jQuery Easing
  *				jQuery ScrollTo
@@ -298,43 +298,63 @@
 			update_history : function() {
 				var $this = this;
 				var settings = $this.settings;
+				//if we're using history and we are currently scrolling or swapping rows
 				if($this.history && $this.scrolling || $this.history && $this.row_switch) {
 					var $current = $this.current;
 					var slug = $current.data('slug');
 					var id = $current.attr('id');
 					var state_data = $current.data();
 					var title;
+					//if there is a base title
 					if(settings.base_title) {
+						//if base title is supposed to come before everything
 						if(settings.base_title_pos === 'before') {
 							title = settings.base_title + settings.base_title_sep + $current.data('title');
+						//if base title is supposed to come after everything
 						} else if(settings.base_title_pos === 'after') {
 							title = $current.data('title') + settings.base_title_sep + settings.base_title;
+						//if base title position is not set
 						} else {
 							title = $current.data('title');
 						}
+					//if there is no base title
 					} else {
 						title = $current.data('title');
 					}
+					//set url from base_url and current container slug
 					var url = settings.base_url + $current.data('slug');
+					//if we're set up for multi directional slideshows
 					if(settings.multi_dir) {
 						var slide_url;
-						//var url_index;
+						//if we're on a container and switching rows
 						if($this.type == 'container' && $this.row_switch) {
 							$this.row_switch = false;
+							//if there is an active slide set
 							if($current.data('active-slide')) {
-								slide_url = $current.find(settings.slides + ':eq(' + parseInt($current.data('active-slide'), '') + ')').data('slug');
-								//url_index = parseInt($current.data('active-slide'), '') + 1;
+								slide_url = $current.find(settings.slides + ':eq(' + parseInt($current.data('active-slide'), 10) + ')').data('slug');
+							//if there isn't
 							} else {
-								slide_url = $current.find(settings.slides + ':eq(0)').data('slug');
-								//url_index = 1;
+								//check for slug
+								if($current.find(settings.slides + ':eq(0)').data('slug')) {
+									slide_url = $current.find(settings.slides + ':eq(0)').data('slug');
+								//if there is no slug use a 1-indexed integer for the sub-url
+								} else {
+									slide_url = 1;
+								}
 							}
+						//if we're not
 						} else {
-							slide_url = $current.find(settings.slides + ':eq(' + $this.slide + ')');
-							//url_index = $this.slide + 1;
+							//if this slide has a slug
+							if($current.find(settings.slides + ':eq(' + $this.slide + ')').data('slug')) {
+								slide_url = $current.find(settings.slides + ':eq(' + $this.slide + ')').data('slug');
+							} else {
+								slide_url = $this.slide + 1;
+							}
 						}
+						//add sub url to url
 						url += '/' + slide_url;
-						//url += '/' + url_index;
 					}
+					//set up state object
 					var state_obj = {
 						id : id,
 						atts : state_data,
@@ -343,7 +363,9 @@
 						slide : $this.slide,
 						direction : $this.direction
 					};
+					//update history
 					History.pushState(state_obj, title, url);
+				//if we're not using history or not moving
 				} else {
 					return false;
 				}
@@ -363,7 +385,6 @@
 					}
 					//split url into array
 					var slug_array = slug.split('/');
-					console.log(slug_array[slug_array.length - 1]);
 					$(settings.container).each(function() {
 						if($(this).data('slug') == slug) {
 							$this.go_to = $(this).index();
@@ -374,6 +395,7 @@
 							return false;
 						}
 					});
+					return true;
 				} else {
 					$this.current = $(settings.container + ':first-child');
 					$this.container = 0;
@@ -577,10 +599,21 @@
 				var settings = $this.settings;
 				//on nav click
 				$('body').on('click', '.slide-circle', function(e) {
+					$this.scrolling = true;
 					var that = $(this).index();
+					if(that > $('.slide-circle.active').index()) {
+						$this.direction = 'd';
+					} else if(that < $('.slide-circle.active').index()) {
+						$this.direction = 'u';
+					}
 					$this.go_to = that;
 					$this.type = 'container';
 					$this.current = $(settings.container + ':eq(' + that + ')');
+					if($this.current.data('active-slide')) {
+						$this.slide = $this.current.data('active-slide');
+					} else {
+						$this.slide = 0;
+					}
 					$this.update_history();
 				});
 			},
@@ -589,66 +622,94 @@
 			get_next : function() {
 				var $this = this;
 				var settings = $this.settings;
+				$this.container = $(settings.slideshow_class).find('.active').index();
+				//make sure a direction has been set
 				if($this.direction) {
 					var dir = $this.direction;
+					//going up
 					if(dir === 'u') {
 						//if there is a previous item
 						if($(settings.slideshow_class).find('.active').prev(settings.container).length) {
 							$this.scrolling = true;
 							$this.current = $(settings.slideshow_class).find('.active').prev(settings.container);
+							if($this.current.data('active-slide')) {
+								$this.slide = $this.current.data('active-slide');
+							} else {
+								$this.slide = 0;
+							}
 							$this.type = 'container';
 							$this.go_to = $this.current.index();
+						//if there isn't
 						} else {
 							$this.scrolling = false;
 						}
+					//going down
 					} else if(dir === 'd') {
 						//if there is a next item
 						if($(settings.slideshow_class).find('.active').next(settings.container).length) {
 							$this.scrolling = true;
 							$this.current = $(settings.slideshow_class).find('.active').next(settings.container);
+							if($this.current.data('active-slide')) {
+								$this.slide = $this.current.data('active-slide');
+							} else {
+								$this.slide = 0;
+							}
 							$this.type = 'container';
 							$this.go_to = $this.current.index();
+						//if there isn't
 						} else {
 							$this.scrolling = false;
 						}
+					//going left
 					} else if(dir === 'l' && settings.multi_dir) {
 						//if there is a next item
 						if($(settings.container + ':eq(' + $this.container + ')').find('.current').prev(settings.slides).length) {
 							$this.scrolling = true;
 							$this.type = 'slide';
-							$this.go_to = $(settings.container + ':eq(' + $this.container + ')').find('.current').prev(settings.slides);
-							$this.slide = $this.go_to.index();
+							$this.go_to = $(settings.container + ':eq(' + $this.container + ')').find('.current').prev(settings.slides).index();
+							$this.slide = $this.go_to;
+						//if there isn't
 						} else {
+							//if we're set to go to the next container
 							if(settings.go_to_next_container && $(settings.container + ':eq(' + $this.container + ')').prev(settings.container).length) {
 								$this.row_switch = true;
 								$this.current = $(settings.container + ':eq(' + $this.container + ')').prev(settings.container);
+								$this.slide = $this.current.data('active-slide');
 								$this.type = 'container';
 								$this.go_to = $this.current.index();
 								$this.direction = 'u';
+							//if we aren't
 							} else {
 								$this.scrolling = false;
 							}
 						}
+					//going right
 					} else if(dir === 'r' && settings.multi_dir) {
 						//if there is a next item
 						if($(settings.container + ':eq(' + $this.container + ')').find('.current').next(settings.slides).length) {
 							$this.scrolling = true;
 							$this.type = 'slide';
-							$this.go_to = $(settings.container + ':eq(' + $this.container + ')').find('.current').next(settings.slides);
-							$this.slide = $this.go_to.index();
+							$this.go_to = $(settings.container + ':eq(' + $this.container + ')').find('.current').next(settings.slides).index();
+							$this.slide = $this.go_to;
+						//if there isn't
 						} else {
+							//if we're set to go to the next container
 							if(settings.go_to_next_container && $(settings.container + ':eq(' + $this.container + ')').next(settings.container).length) {
 								$this.row_switch = true;
 								$this.current = $(settings.container + ':eq(' + $this.container + ')').next(settings.container);
+								$this.slide = $this.current.data('active-slide');
 								$this.type = 'container';
 								$this.go_to = $this.current.index();
 								$this.direction = 'd';
+							//if we aren't
 							} else {
 								$this.scrolling = false;
 							}
 						}
 					}
+					//update history
 					$this.update_history();
+				//if there wasn't a direction
 				} else {
 					return false;
 				}
@@ -673,11 +734,11 @@
 				}
 			},
 
-			//move slideshow to given slide
+			//move slideshow to given container
 			move_to : function() {
 				var $this = this;
 				var settings = $this.settings;
-				//if($this.direction === 'u' || $this.direction === 'd') {
+				if($this.direction === 'u' || $this.direction === 'd') {
 					var go_to_this = $(settings.container + ':eq(' + $this.go_to + ')');
 					//unset the active slide
 					$(settings.slideshow_class).find('.active').removeClass('active');
@@ -707,7 +768,7 @@
 					}
 					//reset direction
 					$this.direction = '';
-				//}
+				}
 			},
 
 			//bind history statechange event
@@ -717,7 +778,7 @@
 				// Bind to StateChange Event
 				History.Adapter.bind(window, 'statechange', function() {
 					var State = History.getState();
-					History.log(State.data, State.title, State.url);
+					//History.log(State.data, State.title, State.url);
 					var url = State.url;
 					//if there is a trailing slash, remove it
 					if(url.substr(-1) == '/') {
@@ -727,44 +788,82 @@
 					var base_length = settings.base_url.length;
 					//remove base from url
 					var slug = url.substr(base_length);
+					var con_slug = '';
+					var slide_slug = '';
 					$this.container = State.data.container;
 					$this.slide = State.data.slide;
-					//if we are supposed to be looking for the container and it's multi-directional
-					if(State.data.type == 'container' && settings.multi_dir) {
-						//remove the slide index from the url
+					//if it's multi-directional
+					if(settings.multi_dir) {
+						//find the slide and container slugs
 						var slash_pos = slug.lastIndexOf('/');
-						slug = slug.substr(0, slash_pos);
+						//container slug is the everything before the last slash
+						con_slug = slug.substr(0, slash_pos);
+						//slide slug is everything after the last slash
+						slide_slug = slug.substr(slash_pos + 1);
 					}
 					//find the index of the container we need
 					var found = false;
 					$(settings.container).each(function() {
-						if($(this).data('slug') == slug) {
-							var go_to = $(this).index();
-							$this.go_to = go_to;
-							$this.switch_nav(go_to);
-							found = true;
-							//exit the .each() loop
-							return false;
+						var go_to;
+						//if we are multi-directional
+						if(con_slug.length && settings.multi_dir) {
+							if($(this).data('slug') == con_slug) {
+								go_to = $(this).index();
+								$this.go_to = go_to;
+								$this.container = go_to;
+								$this.switch_nav(go_to);
+								found = false;
+								//exit the .each() loop
+								return false;
+							}
+						//if we aren't
+						} else {
+							if($(this).data('slug') == slug) {
+								go_to = $(this).index();
+								$this.go_to = go_to;
+								$this.container = go_to;
+								$this.switch_nav(go_to);
+								found = true;
+								//exit the .each() loop
+								return false;
+							}
 						}
 					});
-					//if we didn't find a slug match in a container
-					if(!found && settings.multi_dir) {
+
+					//if we still need to find a slug match in a slide
+					if(settings.multi_dir && !found) {
 						if($('#' + State.data.id).hasClass('active')) {
 							var check_index = $('#' + State.data.id).find('.current').index();
-							if($this.slide > check_index && check_index <= $(settings.container + ':eq(' + $this.container + ')').find(settings.slides).length) {
+							if($this.slide > check_index && check_index <= $(settings.container + ':eq(' + $this.container + ')').data('slides')) {
 								$this.direction = 'r';
 							} else if($this.slide < check_index && check_index >= 0) {
 								$this.direction = 'l';
 							}
 						}
-						//find position of last slash and add 1 to it
-						var last_slash = slug.lastIndexOf('/') + 1;
-						//make slide_slug equal to everything after the last slash
-						var slide_index = slug.substr(last_slash);
+						var slide_index;
+						//find the slide slug
+						var found_s = false;
+						$(settings.container + ':eq(' + $this.container + ')').find(settings.slides).each(function() {
+							if($(this).data('slug') == slide_slug) {
+								slide_index = $(this).index();
+								found_s = true;
+								return false;
+							}
+						});
+						if(!found_s) {
+							$(settings.container + ':eq(' + $this.container + ')').find(settings.slides).each(function() {
+								if($(this).index() + 1 == slide_slug) {
+									slide_index = $(this).index();
+									found_s = true;
+									return false;
+								}
+							});
+						}
 						//get the actual index of the slide from the slug by subtracting 1
-						slide_index = parseInt(slide_index, '') - 1;
-						$this.go_to = slide_index;
-						$this.slide_horizontal();
+						$this.go_to = parseInt(slide_index, 10);
+						if($this.go_to != $(settings.container + ':eq(' + $this.container + ')').data('active-slide')) {
+							$this.slide_horizontal();
+						}
 					}
 				});
 			},
@@ -813,22 +912,15 @@
 				var $this = this;
 				var settings = $this.settings;
 				if(typeof $this.go_to !== 'undefined') {
-					console.log('check 1');
 					var move = '';
 					var go_to;
 					//set index for desired element
 					if(typeof $this.go_to !== 'number') {
-						console.log('check 2');
 						$this.slide = $this.go_to.index();
 						go_to = $this.go_to;
 					} else {
-						console.log('check 3');
 						$this.slide = $this.go_to;
 						go_to = $(settings.container + ':eq(' + $this.container +')').find(settings.slides + ':eq(' + $this.go_to + ')');
-					}
-					if(typeof $this.container === 'undefined') {
-						console.log('check 4');
-						$this.container = go_to.parent().index();
 					}
 					if(settings.slides_before) {
 						settings.slides_before.call(this);
@@ -844,19 +936,14 @@
 					//scroll
 					var left = $(settings.container + ':eq(' + $this.container + ')').offset().left;
 					if(left != '0px') {
-						console.log('check 6');
 						if($this.direction == 'r') {
-							console.log('check 7');
 							move = left - $this.win_width;
 						} else if($this.direction == 'l') {
-							console.log('check 8');
 							move = left + $this.win_width;
 						}
 					} else {
-						console.log('check 9');
 						move = 0;
 					}
-					console.log(move);
 					TweenMax.to(
 						$(settings.container + ':eq(' + $this.container + ')'), 0.8, {
 							css : {
