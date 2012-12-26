@@ -90,46 +90,34 @@
 
 		//set up default options
 		$.fn.scrollSwipeSlide.default_settings = {
-			use_scrollto : true, //requires jQuery ScrollTo (this is included in the scripts folder)
-			use_swipe : true, //requires a swipe events plug-in (jQuery++ Swipe Events with swipe variation threshhold is included in the scripts folder)
-			use_keypress : true,
-			use_history : false, //requires History JS (this is included in the scripts folder)
-			enable_scroll : false,
-			base_url : '', //required if you want to use History JS
-			//used to display a certain title along with the data-title for each project/slide when using History JS
-			base_title : '',
-			//whether the base_title shows up before or after the data-title in the page's title
-			base_title_pos : 'after',
-			//what separator to use between the base_title and data-title
-			base_title_sep : ' | ',
-			//true = slideshows to use vertical and horizontal movement
-			multi_dir : false,
-			//true = when scrolling to the left and right at the end of a container's slides, move to the next or previous container
-			go_to_next_container: false,
-			container : '.project',
-			//runs before switching containers
-			container_before : '',
-			//runs after switching containers
-			container_after : '',
-			slides : '.slide',
-			//runs before switching slides
-			slides_before : '',
-			//runs after switching slides
-			slides_after : '',
-			center_nav : true,
-			nav : '.slide-nav',
-			nav_height : '10',
-			slideshow_class : '.slideshow',
-			easing : 'easeInOutExpo', //requires easing plug-in (this is included in the scrips folder)
-			//less than 1000 and it double scrolls when using Apple's inertial scrolling
-			scroll_time : 1000,
-			scroll_lockout : 20,
-			width : '100%',
-			height : '100%',
-			//if you have a title page that you don't want to include in your slides
-			skip_first : false,
-			//runs after initializing the slideshow
-			callback : ''
+			use_scrollto : true,						//requires jQuery ScrollTo (this is included in the scripts folder)
+			use_swipe : true,							//requires a swipe events plug-in (jQuery++ Swipe Events with swipe variation threshhold is included in the scripts folder)
+			use_keypress : true,						//whether or not you want to use the arrow keys
+			use_history : false,						//requires History JS (this is included in the scripts folder)
+			enable_scroll : false,						//if you want to use the scrollwheel
+			base_url : '',								//required if you want to use History JS
+			base_title : '',							//the title that you want displayed in all of your History entries
+			base_title_pos : 'after',					//whether you want the data-title attribute of the current slide to show before or after the base_title
+			base_title_sep : ' | ',						//what you want displayed between the base_title and the data-title of the current slide (no spaces are included by default)
+			multi_dir : false,							//true = slideshow uses vertical and horizontal movement
+			go_to_next_container: false,				//true = scrolling to the left or right at the end of a container's slides moves to the next or previous container
+			container : '.project',						//what class do your containers (the slides that move vertically and contain horizontally moving slides) have?
+			container_before : '',						//callback function that runs BEFORE switching containers (sliding vertically)
+			container_after : '',						//callback function that runs AFTER switching containers (sliding vertically)
+			slides : '.slide',							//what class do your slides (the slides that move horizontally and are inside containers) have?
+			slides_before : '',							//callback function that runs BEFORE switching slides (sliding horizontally)
+			slides_after : '',							//callback function that runs AFTER switching slides (Sliding horizontally)
+			center_nav : true,							//true = navigation circles for containers to be centered vertically within the window?
+			nav : '.slide-nav',							//what class does your navigation have?
+			nav_height : '10',							//what height do you want the nav circles to be
+			slideshow_class : '.slideshow',				//what class does your overall slideshow have?
+			easing : 'easeInOutExpo',					//easing for your slide transitions, requires easing plug-in (this is included in the scrips folder)
+			scroll_time : 1000,							//how long do you want the slide transitions to take?
+			scroll_lockout : 20,						//this is needed due to inertial scrolling on Apple Devices
+			width : '100%',								//how wide is your slideshow
+			height : '100%',							//how tall is your slideshow
+			skip_first : false,							//true = ignore first transition (if you have a title screen and don't want it included in normal slideshow operations)
+			callback : ''								//callback function that runs AFTER the slideshow has been initialized
 		};
 
 		//add settings to object
