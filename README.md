@@ -7,10 +7,10 @@ Configuration Options
 =====================
 
 	use_scrollto : true,						//requires jQuery ScrollTo (this is included in the scripts folder)
-	use_swipe : true,							//requires a swipe events plug-in (jQuery++ Swipe Events with a custom swipe variation threshhold[for angled swipes] is included in the scripts folder)
-	use_keypress : true,						//whether or not you want to use the arrow keys
+	use_swipe : true,							//requires a swipe events plug-in (this can be toggled at any time) (jQuery++ Swipe Events with a custom swipe variation threshhold[for angled swipes] is included in the scripts folder)
+	use_keypress : true,						//whether or not you want to use the arrow keys (this can be toggled at any time)
 	use_history : false,						//requires History JS (this is included in the scripts folder)
-	enable_scroll : false,						//if you want to use the scrollwheel
+	enable_scroll : false,						//if you want to use the scrollwheel (this can be toggled at any time)
 	base_url : '',								//required if you want to use History JS
 	base_title : '',							//the title that you want displayed in all of your History entries
 	base_title_pos : 'after',					//whether you want the data-title attribute of the current slide to show before or after the base_title
@@ -34,3 +34,8 @@ Configuration Options
 	height : '100%',							//how tall is your slideshow?
 	skip_first : false,							//true = ignore first transition (if you have a title screen and don't want it included in normal slideshow operations)
 	callback : ''								//callback function that runs AFTER the slideshow has been initialized
+
+Where it's used
+===============
+
+[The Body Adorned](http://exhibitions.snagmetalsmith.org/bodyadorned/) - Uses a vertical-only implementation and toggles the scroll, swipe, and slide when viewing artist statements and other elements that need to be scrollable without triggering the slideshow.
