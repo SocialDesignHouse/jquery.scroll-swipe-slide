@@ -6,7 +6,7 @@ Scrolling, swiping slideshow plug-in for jQuery
 Configuration Options
 =====================
 
-`	use_scrollto : true,						//requires jQuery ScrollTo (this is included in the scripts folder)
+	use_scrollto : true,						//requires jQuery ScrollTo (this is included in the scripts folder)
 	use_swipe : true,							//requires a swipe events plug-in (jQuery++ Swipe Events with a custom swipe variation threshhold[for angled swipes] is included in the scripts folder)
 	use_keypress : true,						//whether or not you want to use the arrow keys
 	use_history : false,						//requires History JS (this is included in the scripts folder)
@@ -33,4 +33,4 @@ Configuration Options
 	width : '100%',								//how wide is your slideshow?
 	height : '100%',							//how tall is your slideshow?
 	skip_first : false,							//true = ignore first transition (if you have a title screen and don't want it included in normal slideshow operations)
-	callback : ''								//callback function that runs AFTER the slideshow has been initialized`
+	callback : ''								//callback function that runs AFTER the slideshow has been initialized
