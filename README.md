@@ -38,4 +38,4 @@ Configuration Options
 Where it's used
 ===============
 
-[The Body Adorned](http://exhibitions.snagmetalsmith.org/bodyadorned/) - Uses a vertical-only implementation and toggles the scroll, swipe, and slide when viewing artist statements and other elements that need to be scrollable without triggering the slideshow.
+[The Body Adorned](http://exhibitions.snagmetalsmith.org/bodyadorned/) - v0.9 - Uses a vertical-only implementation and toggles the scroll, swipe, and slide when viewing artist statements and other elements that need to be scrollable without triggering the slideshow.
