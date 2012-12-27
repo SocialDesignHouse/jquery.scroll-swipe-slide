@@ -1,5 +1,5 @@
-jquery.scroll-swipe-slide
-=========================
+jquery.scroll-swipe-slide.js v1.0.1
+===================================
 
 Scrolling, swiping slideshow plug-in for jQuery
 
