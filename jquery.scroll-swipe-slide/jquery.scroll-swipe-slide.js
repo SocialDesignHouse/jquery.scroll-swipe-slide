@@ -289,7 +289,6 @@
 				//if we're using history and we are currently scrolling or swapping rows
 				if($this.history && $this.scrolling || $this.history && $this.row_switch) {
 					var $current = $this.current;
-					var slug = $current.data('slug');
 					var id = $current.attr('id');
 					var state_data = $current.data();
 					var title;
@@ -371,8 +370,6 @@
 					if(slug.charAt(slug.length - 1) == '/') {
 						slug = slug.slice(0, -1);
 					}
-					//split url into array
-					var slug_array = slug.split('/');
 					$(settings.container).each(function() {
 						if($(this).data('slug') == slug) {
 							$this.go_to = $(this).index();
@@ -586,7 +583,7 @@
 				var $this = this;
 				var settings = $this.settings;
 				//on nav click
-				$('body').on('click', '.slide-circle', function(e) {
+				$('body').on('click', '.slide-circle', function() {
 					$this.scrolling = true;
 					var that = $(this).index();
 					if(that > $('.slide-circle.active').index()) {
