@@ -3,15 +3,14 @@
  * Social Design House
  * Delicious Design, Start to Finish
  *
- * @author		Eric Allen
+ * @author			Eric Allen
  * @copyright		Copyright (c) 2012 Social Design House
- * @license		MIT
- * @link		http://socialdesignhouse.com/
- * @docs		http://socialdesignhouse.com/
- * @version		1.0
- * @deps		jQuery, jQuery Mousewheel, History JS
- * @optional	jQuery++ Swipe Events (custom build), jQuery Easing
- *				jQuery ScrollTo
+ * @license			MIT
+ * @link			http://socialdesignhouse.com/
+ * @docs			http://socialdesignhouse.com/
+ * @version			1.0.2
+ * @deps			jQuery, jQuery Mousewheel, History JS
+ * @optional		jQuery++ Swipe Events (custom build), jQuery Easing, jQuery ScrollTo
  *
 ===================================================================*/
 
@@ -287,7 +286,7 @@
 				var $this = this;
 				var settings = $this.settings;
 				//if we're using history and we are currently scrolling or swapping rows
-				if($this.history && $this.scrolling || $this.history && $this.row_switch) {
+				if($this.history) {
 					var $current = $this.current;
 					var id = $current.attr('id');
 					var state_data = $current.data();
@@ -429,12 +428,12 @@
 				var settings = $this.settings;
 				//on keypress
 				$(document).keydown(function(e) {
-					//prevent normal action
-					if (e.preventDefault) {
-						e.preventDefault();
-					}
 					//in case the user has toggled the use_keys option, we need to check again
 					if(settings.use_keypress) {
+						//prevent normal action
+						if (e.preventDefault) {
+							e.preventDefault();
+						}
 						//get keycode
 						var key = e.which;
 						//if we aren't currently scrolling
@@ -465,8 +464,10 @@
 							//$this.slide_it();
 							$this.get_next();
 						}
+						return false;
+					} else {
+						return true;
 					}
-					return false;
 				});
 			},
 
