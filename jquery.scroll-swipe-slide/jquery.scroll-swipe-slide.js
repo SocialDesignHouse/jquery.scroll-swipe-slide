@@ -4,19 +4,19 @@
  * Delicious Design, Start to Finish
  *
  * @author			Eric Allen
- * @copyright		Copyright (c) 2012 Social Design House
+ * @copyright		Copyright (c) 2012 - 2013 Social Design House
  * @license			MIT
  * @link			http://socialdesignhouse.com/
- * @docs			http://socialdesignhouse.com/
- * @version			1.0.2
- * @deps			jQuery, jQuery Mousewheel, History JS
- * @optional		jQuery++ Swipe Events (custom build), jQuery Easing, jQuery ScrollTo
+ * @docs			README.md should be included, if not (https://github.com/SocialDesignHouse/jquery.scroll-swipe-slide)
+ * @version			1.0.3 beta
+ * @deps			jQuery, jQuery Mousewheel, History JS, TweenMax, jQuery ScrollTo
+ * @optional		jQuery++ Swipe Events (custom build available in scripts folder), jQuery Easing
  *
 ===================================================================*/
 
 	//close out any previous JS with a semi-colon, just in case
 	;(function($) {
-		
+
 		//define plug-in jquery function
 		$.fn.scrollSwipeSlide = function(option, settings) {
 			//if scrollSwipeSlide was called with options
@@ -92,10 +92,10 @@
 			use_scrollto : true,						//requires jQuery ScrollTo (this is included in the scripts folder)
 			use_swipe : true,							//requires a swipe events plug-in (jQuery++ Swipe Events with swipe variation threshhold is included in the scripts folder)
 			use_keypress : true,						//whether or not you want to use the arrow keys
-			use_history : false,						//requires History JS (this is included in the scripts folder)
+			use_history : true,							//requires History JS (this is included in the scripts folder)
 			enable_scroll : false,						//if you want to use the scrollwheel
 			base_url : '',								//required if you want to use History JS
-			base_title : '',							//the title that you want displayed in all of your History entries
+			base_title : document.title,				//the title that you want displayed in all of your History entries
 			base_title_pos : 'after',					//whether you want the data-title attribute of the current slide to show before or after the base_title
 			base_title_sep : ' | ',						//what you want displayed between the base_title and the data-title of the current slide (no spaces are included by default)
 			multi_dir : false,							//true = slideshow uses vertical and horizontal movement
@@ -110,7 +110,8 @@
 			nav : '.slide-nav',							//what class does your navigation have?
 			nav_height : '10',							//what height do you want the nav circles to be
 			slideshow_class : '.slideshow',				//what class does your overall slideshow have?
-			easing : 'easeInOutExpo',					//easing for your slide transitions, requires easing plug-in (this is included in the scrips folder)
+			v_easing : 'swing',							//easing for your container transitions, requires easing plug-in (this is included in the scrips folder)
+			h_easing : Expo.easeInOut,					//easing for your slide transitions, uses TweenMax easing classes (http://api.greensock.com/js/)
 			scroll_time : 1000,							//how long do you want the slide transitions to take?
 			scroll_lockout : 20,						//this is needed due to inertial scrolling on Apple Devices
 			width : '100%',								//how wide is your slideshow
@@ -133,7 +134,6 @@
 		------------------------------------------------------------------------------*/
 
 		scrollSwipeSlide.prototype = {
-			
 			//set up this instance
 			initialize : function() {
 				var $this = this;
@@ -182,7 +182,7 @@
 					settings.callback.call(this);
 				}
 			},
-			
+
 			//bind event handlers
 			bind_events : function() {
 				var $this = this;
@@ -259,7 +259,7 @@
 					}
 				}
 			},
-			
+
 			//create the navigation
 			build_nav : function() {
 				var $this = this;
@@ -740,7 +740,7 @@
 				//scroll it
 				$(settings.slideshow_class).stop(true,true).scrollTo(
 					go_to_this, settings.scroll_time, {
-						easing : settings.easing,
+						easing : settings.v_easing,
 						onAfter : function() {
 							var scroll_timeout = setTimeout(function() { $this.scrolling = false; }, settings.scroll_lockout);
 						}
@@ -930,7 +930,7 @@
 							css : {
 								'left' : move + 'px'
 							},
-							ease : Expo.easeInOut,
+							ease : settings.h_easing,
 							onComplete : function() {
 								var scroll_timeout = setTimeout(function() { $this.scrolling = false; }, settings.scroll_lockout);
 							}
