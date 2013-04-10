@@ -84,8 +84,8 @@ Configuration Options
 Where it's used
 ===============
 
-+[The Body Adorned](http://exhibitions.snagmetalsmith.org/bodyadorned/) - v0.9 - Uses a vertical-only implementation and toggles the scroll, swipe, and slide when viewing artist statements and other elements that need to be scrollable without triggering the slideshow.
-+[Demo](http://ericrallen.com/demo/scroll-swipe-slide/) - v1.0.2 - A quick demo to show the multi-directional capabilities of jq-scroll-swipe-slide. There will be an actual live site utilizing this functionality soon.
++ [The Body Adorned](http://exhibitions.snagmetalsmith.org/bodyadorned/) - v0.9 - Uses a vertical-only implementation and toggles the scroll, swipe, and slide when viewing artist statements and other elements that need to be scrollable without triggering the slideshow.
++ [Demo](http://ericrallen.com/demo/scroll-swipe-slide/) - v1.0.2 - A quick demo to show the multi-directional capabilities of jq-scroll-swipe-slide. There will be an actual live site utilizing this functionality soon.
 
 Bugs
 ====
